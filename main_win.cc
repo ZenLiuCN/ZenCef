@@ -5,8 +5,9 @@
 #include <windows.h>
 #include <iostream>
 #include "goserver.h"
-#include "simple_app.h"
+#include "app.h"
 #include "include/cef_sandbox_win.h"
+#include "debug.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
@@ -54,7 +55,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     }
     //<editor-fold desc="Hidden console Window">
     auto hwnd = GetConsoleWindow();
-    std::cout << hwnd << std::endl;
+    LOGGER_("hidden console window %p",hwnd);
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
     //</editor-fold>
     // Specify CEF global settings here.
@@ -68,7 +69,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     // SimpleApp implements application-level callbacks for the browser process.
     // It will create the first browser instance in OnContextInitialized() after
     // CEF has initialized.
-    CefRefPtr<SimpleApp> app(new SimpleApp);
+    CefRefPtr<App> app(new App);
 
     // Initialize CEF.
     CefInitialize(main_args, settings, app.get(), sandbox_info);

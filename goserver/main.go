@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	. "github.com/lxn/win"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 )
 
 var (
+	logger    = log.New(os.Stdout, "[GO]", log.LstdFlags|log.Llongfile)
 	server    *http.Server
 	rc        *RECT
 	lastLBPos *POINT
@@ -28,29 +30,29 @@ var (
 
 //export goStopServer
 func goStopServer() {
-	println("called goStopServer")
+	logger.Println("called goStopServer")
 	server.Close()
 }
 
 //export goSetHwnd
 func goSetHwnd(hwnd C.HWND) {
-	println("called goSetHwnd")
+	logger.Println("called goSetHwnd")
 	win = HWND(unsafe.Pointer(hwnd))
 }
 
 //export goGetExtJson
 func goGetExtJson() *C.char {
-	println("called goGetExtJson")
+	logger.Println("called goGetExtJson")
 	return C.CString(`var WinObj;WinObj||(WinObj={});(function(){WinObj.wss="ws://127.0.0.1:65530/win";WinObj.close=function(){WinObj.WinWS.send("win:close")};WinObj.full=function(){WinObj.WinWS.send("win:full")};WinObj.topMost=function(){WinObj.WinWS.send("win:topMost")};WinObj.max=function(){WinObj.WinWS.send("win:max")};WinObj.min=function(){WinObj.WinWS.send("win:min")};WinObj.restore=function(){WinObj.WinWS.send("win:restore")};WinObj.drag=function(a){a?WinObj.WinWS.send("win:drag:start"):WinObj.WinWS.send("win:drag:stop")};WinObj.onMouseMove=function(a){eve=window.event||ev;WinObj.WinWS.send("win:drag:move|"+eve.offsetX+"|"+eve.offsetY)}})();`)
 }
 
 //export goStartServer
 func goStartServer() {
-	println("called goStartServer")
+	logger.Println("called goStartServer")
 	go WinSrv()
 }
 func WinSrv() {
-	println("will start server ")
+	logger.Println("will start server ")
 	server = &http.Server{Addr: ":65530"}
 	http.HandleFunc("/win", func(w http.ResponseWriter, r *http.Request) {
 		var upgrader = websocket.Upgrader{
@@ -60,7 +62,7 @@ func WinSrv() {
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			println("ws error :", err)
+			logger.Println("ws error :", err)
 			return
 		}
 		for {
@@ -97,7 +99,7 @@ func WinSrv() {
 					SetWindowPos(win, HWND(0), 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
 					ShowWindow(win, SW_SHOW)
 				case cmd == "win:frame:1":
-					SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) & ^WS_CAPTION | WS_THICKFRAME)
+					SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) & ^WS_CAPTION|WS_THICKFRAME)
 					SetWindowPos(win, HWND(0), 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
 				case cmd == "win:frame:2":
 					SetWindowLong(win, GWL_STYLE, WS_OVERLAPPED|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS)
@@ -161,7 +163,7 @@ func WinSrv() {
 	server.ListenAndServe()
 }
 func main() {
-	println("main quited")
+	logger.Println("main quited")
 	os.Exit(0)
 }
 func OffsetRect(rect *RECT, offX int32, offY int32) {

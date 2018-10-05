@@ -9,20 +9,20 @@
 
 #include <list>
 
-class SimpleHandler : public CefClient,
+class LifeSpanHandler : public CefClient,
                       public CefDisplayHandler,
                       public CefLifeSpanHandler,
                       public CefLoadHandler {
  public:
-  SimpleHandler();
+  LifeSpanHandler();
 
     bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
                           int line) override;
 
-    ~SimpleHandler();
+    ~LifeSpanHandler();
 
   // Provide access to the single global instance of this object.
-  static SimpleHandler* GetInstance();
+  static LifeSpanHandler* GetInstance();
 
   // CefClient methods:
   virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
@@ -64,7 +64,7 @@ class SimpleHandler : public CefClient,
   bool is_closing_;
 
   // Include the default reference counting implementation.
-  IMPLEMENT_REFCOUNTING(SimpleHandler);
+  IMPLEMENT_REFCOUNTING(LifeSpanHandler);
 };
 
 #endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
