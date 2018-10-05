@@ -17,10 +17,12 @@ already test on windows 7 x64 ,And it may only support windows
 1. get mingw64 for 32bit
 1. get cmake 3.12+
 1. get go 1.8+ for 32bit
-1. get cef3 binary form [binary]()
+1. get cef3 binary form [binary](https://github.com/ZenLiuCN/zcef/releases/tag/v0.pre)
 1. build go lib via `./goserver/build.bat`
 1. build app via cmake 
 
 ## go libs depend on
 1. [lxn/win](https://github.com/lxn/win) for easy winapi control
 1. [gorilla/websocket](https://github.com/gorilla/websocket) for websocket process
+
+# see some thing like in spring boot [ZenLiuCN/Pandomium-Vue-Spring-template](https://github.com/ZenLiuCN/Pandomium-Vue-Spring-template)
