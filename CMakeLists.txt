@@ -29,7 +29,7 @@ set(RESOURCE_SRC
 set(TEST_HTML
         ${PROJECT_SOURCE_DIR}/ext/test.html)
 
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -municode -mwindows)
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -mwindows)
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
 link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a D:/Dev/env/mingw/mingw32/i686-w64-mingw32/lib/libwinmm.a D:/Dev/env/mingw/mingw32/i686-w64-mingw32/lib/libws2_32.a)
 add_executable(cef

@@ -59,14 +59,16 @@ void App::OnContextInitialized() {
 //TODO 2018-10-5 14:42 Zen Liu: NOT EFFECTED
 void App::OnWebKitInitialized() {
     auto js = goGetExtJson();
-    auto code = CefStringUTF16(js);
-    std::wcout << "register js code" << code.c_str() << std::endl;
-    CefRegisterExtension("v8/test", code, nullptr);
+    LOGGER_("register js code :%s", js)
+    CefRegisterExtension("v8/test", CefStringUTF16(js), nullptr);
 //    CefRenderProcessHandler::OnWebKitInitialized();
 }
 
 bool App::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
                            int line) {
-    std::wcout << message.c_str() << std::endl;
+    auto msg = cefSourceToString(&message);
+    auto src = cefSourceToString(&source);
+    goConsoleLogger(msg->str, src->str, line);
+//    CONSOLE_LOGGER_(message.ToString16().c_str());
     return false;
 }

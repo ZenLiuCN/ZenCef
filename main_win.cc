@@ -33,7 +33,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     // Enable High-DPI support on Windows 7 or newer.
     CefEnableHighDPISupport();
 
-    void *sandbox_info = NULL;
+    void *sandbox_info = nullptr;
 
 #if defined(CEF_USE_SANDBOX)
     // Manage the life span of the sandbox information object. This is necessary
@@ -54,6 +54,11 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
         return exit_code;
     }
     //<editor-fold desc="Hidden console Window">
+    //<editor-fold desc="ForUTF8Out">
+    setlocale(LC_ALL, "");
+    SetConsoleOutputCP (65001);
+//    setvbuf(stdout, nullptr, _IOFBF, 16);
+    //</editor-fold>
     auto hwnd = GetConsoleWindow();
     LOGGER_("hidden console window %p",hwnd);
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);

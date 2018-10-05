@@ -40,6 +40,11 @@ func goSetHwnd(hwnd C.HWND) {
 	win = HWND(unsafe.Pointer(hwnd))
 }
 
+//export goConsoleLogger
+func goConsoleLogger(message *C.char, source *C.char, line int) {
+	logger.Printf("\n[%s %d] %s\n", C.GoString(source), line, C.GoString(message))
+}
+
 //export goGetExtJson
 func goGetExtJson() *C.char {
 	logger.Println("called goGetExtJson")

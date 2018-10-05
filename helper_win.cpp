@@ -4,10 +4,10 @@
 
 
 
+
 #include "helper_win.h"
 
 using namespace std;
-
 
 
 string GetAppDir() {
@@ -17,4 +17,15 @@ string GetAppDir() {
     string a = ret;
     free(ret);
     return a;
+}
+
+
+
+cef_string_utf8_t *cefSourceToString(const CefString *source) {
+    cef_string_utf8_t *output = cef_string_userfree_utf8_alloc();
+    if (source == nullptr) {
+        return nullptr;
+    }
+    cef_string_to_utf8(source->GetStruct()->str, source->GetStruct()->length, output);
+    return output;
 }

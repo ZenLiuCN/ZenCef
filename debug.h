@@ -4,9 +4,12 @@
 
 #ifndef PROJECT_DEBUG_H
 #define PROJECT_DEBUG_H
-#ifndef NOLOG
+
 #include <time.h>
-    #define LOGGER_(format, ...){\
+#include <fcntl.h>
+
+#ifndef NOLOG
+#define LOGGER_(format, ...){\
     time_t t;struct tm *p;time(&t);p=localtime(&t);\
     printf("[CEF] %d-%d-%d %d:%d:%d %s:%d <%s> :\n",1900+p->tm_year,1+p->tm_mon,p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec,\
             __FILE__,__LINE__,__func__);\
@@ -15,4 +18,11 @@
     printf(" %s\n", str2);\
     }
 #endif
+#define CONSOLE_LOGGER_(m){\
+    time_t t;struct tm *p;time(&t);p=localtime(&t);\
+    printf("[CON] %d-%d-%d %d:%d:%d %s:%d :\n\n",1900+p->tm_year,1+p->tm_mon,p->tm_mday\
+    ,p->tm_hour,p->tm_min,p->tm_sec,\
+            __FILE__,__LINE__);\
+        wprintf(L"%ls\n",m);\
+    }
 #endif //PROJECT_DEBUG_H
