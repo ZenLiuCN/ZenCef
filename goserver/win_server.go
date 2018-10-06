@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"github.com/gorilla/websocket"
 	. "github.com/lxn/win"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -17,48 +16,84 @@ import (
 )
 
 var (
-	logger    = log.New(os.Stdout, "[GO]", log.LstdFlags|log.Llongfile)
-	server    *http.Server
-	rc        *RECT
-	lastLBPos *POINT
-	win       HWND
-	top       = false
-	drag      = false
-	mx        = GetSystemMetrics(SM_CXSCREEN)
-	my        = GetSystemMetrics(SM_CXSCREEN)
+	apiSrv        *http.Server
+	service       = make(map[string]bool)
+	serverRunning = false
+	rc            *RECT
+	lastLBPos     *POINT
+	win           HWND
+	top           = false
+	drag          = false
+	mx            = GetSystemMetrics(SM_CXSCREEN)
+	my            = GetSystemMetrics(SM_CXSCREEN)
 )
 
 //export goStopServer
 func goStopServer() {
-	logger.Println("called goStopServer")
-	server.Close()
+	if debug != 0 {
+		if debug != 0 {
+			logger.Println("called goStopServer")
+		}
+	}
+	apiSrv.Close()
 }
 
 //export goSetHwnd
 func goSetHwnd(hwnd C.HWND) {
-	logger.Println("called goSetHwnd")
+	if debug != 0 {
+		if debug != 0 {
+			logger.Println("called goSetHwnd")
+		}
+	}
 	win = HWND(unsafe.Pointer(hwnd))
-}
-
-//export goConsoleLogger
-func goConsoleLogger(message *C.char, source *C.char, line int) {
-	logger.Printf("\n[%s %d] %s\n", C.GoString(source), line, C.GoString(message))
 }
 
 //export goGetExtJson
 func goGetExtJson() *C.char {
-	logger.Println("called goGetExtJson")
+	if debug != 0 {
+		logger.Println("called goGetExtJson")
+	}
 	return C.CString(`var WinObj;WinObj||(WinObj={});(function(){WinObj.wss="ws://127.0.0.1:65530/win";WinObj.close=function(){WinObj.WinWS.send("win:close")};WinObj.full=function(){WinObj.WinWS.send("win:full")};WinObj.topMost=function(){WinObj.WinWS.send("win:topMost")};WinObj.max=function(){WinObj.WinWS.send("win:max")};WinObj.min=function(){WinObj.WinWS.send("win:min")};WinObj.restore=function(){WinObj.WinWS.send("win:restore")};WinObj.drag=function(a){a?WinObj.WinWS.send("win:drag:start"):WinObj.WinWS.send("win:drag:stop")};WinObj.onMouseMove=function(a){eve=window.event||ev;WinObj.WinWS.send("win:drag:move|"+eve.offsetX+"|"+eve.offsetY)}})();`)
 }
 
-//export goStartServer
-func goStartServer() {
-	logger.Println("called goStartServer")
-	go WinSrv()
+//export goIsServerStarted
+func goIsServerStarted() int {
+	if serverRunning {
+		return 1
+	} else {
+		return 0
+	}
 }
-func WinSrv() {
-	logger.Println("will start server ")
-	server = &http.Server{Addr: ":65530"}
+
+//export goUseHttpServer
+func goUseHttpServer(root *C.char) int {
+	dir := C.GoString(root)
+	if debug!=0{
+		logger.Printf("will enable http service of %s ",dir)
+	}
+	if i, e := os.Stat(dir); e != nil {
+		if debug!=0{
+			logger.Printf("check dir error: %s ",e)
+		}
+		return 0
+	} else if !i.IsDir() {
+		if debug!=0{
+			logger.Printf("check dir error: not dir of %s ",i)
+		}
+		return -1
+	}
+	if debug!=0{
+		logger.Printf("enable http service of %s ",dir)
+	}
+	http.Handle("/", http.FileServer(http.Dir(dir)))
+	service["dir"] = true
+	return 1
+}
+//export goUserApiServer
+func goUserApiServer()  {
+	if debug!=0{
+		logger.Println("enable api service")
+	}
 	http.HandleFunc("/win", func(w http.ResponseWriter, r *http.Request) {
 		var upgrader = websocket.Upgrader{
 			ReadBufferSize:  1024,
@@ -67,7 +102,9 @@ func WinSrv() {
 		}
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			logger.Println("ws error :", err)
+			if debug != 0 {
+				logger.Println("ws error :", err)
+			}
 			return
 		}
 		for {
@@ -127,7 +164,7 @@ func WinSrv() {
 					drag = true
 					lastLBPos = new(POINT)
 					GetCursorPos(lastLBPos)
-					//logger.Println(lastLBPos)
+					//if debug!=0{logger.Println(lastLBPos)}
 					//ScreenToClient(win, lastLBPos)
 				case strings.HasPrefix(cmd, "win:drag:move|"):
 					//if drag && (last == nil || last.Add(bottle).After(time.Now())) {
@@ -165,12 +202,32 @@ func WinSrv() {
 			}
 		}
 	})
-	server.ListenAndServe()
+	service["win"] = true
 }
-func main() {
-	logger.Println("main quited")
-	os.Exit(0)
+//export goStartServer
+func goStartServer(port *C.char) {
+	if debug != 0 {
+		logger.Println("called goStartServer")
+	}
+	apiSrv = &http.Server{Addr: C.GoString(port)}
+	go WinSrv()
 }
+func WinSrv() {
+	if debug != 0 {
+		logger.Println("will start apiSrv ")
+	}
+	if len(service) == 0 {
+		logger.Println("error no service enabled ")
+		return
+	}
+	serverRunning = true
+
+	if e := apiSrv.ListenAndServe(); e != nil {
+		logger.Fatalln("start win api server failed", e)
+		serverRunning = false
+	}
+}
+
 func OffsetRect(rect *RECT, offX int32, offY int32) {
 	rect.Top += offY
 	rect.Bottom += offY

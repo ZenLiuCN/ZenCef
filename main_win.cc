@@ -4,10 +4,7 @@
 
 #include <windows.h>
 #include <iostream>
-#include "goserver.h"
 #include "app.h"
-#include "include/cef_sandbox_win.h"
-#include "debug.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
@@ -25,11 +22,9 @@
 
 //#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
 // Entry point function for all processes.
-
 int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-
     // Enable High-DPI support on Windows 7 or newer.
     CefEnableHighDPISupport();
 
@@ -42,39 +37,36 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     sandbox_info = scoped_sandbox.sandbox_info();
 #endif
 
+    //<editor-fold desc="SubProcess Start">
     // Provide CEF with command-line arguments.
     CefMainArgs main_args(hInstance);
 
-    // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-    // that share the same executable. This function checks the command-line and,
-    // if this is a sub-process, executes the appropriate logic.
-    int exit_code = CefExecuteProcess(main_args, NULL, sandbox_info);
+    int exit_code = CefExecuteProcess(main_args, nullptr, sandbox_info);
     if (exit_code >= 0) {
         // The sub-process has completed so return here.
         return exit_code;
     }
-    //<editor-fold desc="Hidden console Window">
-    //<editor-fold desc="ForUTF8Out">
-    setlocale(LC_ALL, "");
-    SetConsoleOutputCP (65001);
-//    setvbuf(stdout, nullptr, _IOFBF, 16);
     //</editor-fold>
+    //<editor-fold desc="Hidden console Window">
+    setlocale(LC_ALL, "");
     auto hwnd = GetConsoleWindow();
-    LOGGER_("hidden console window %p",hwnd);
+    LOGGER_("hidden console window %p", hwnd);
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
     //</editor-fold>
-    // Specify CEF global settings here.
+    //<editor-fold desc="CefSettings">
     CefSettings settings;
-//    settings.multi_threaded_message_loop = 1;
     settings.remote_debugging_port = 9222;
+    settings.ignore_certificate_errors = 1;
+
 #if !defined(CEF_USE_SANDBOX)
     settings.no_sandbox = true;
 #endif
-
-    // SimpleApp implements application-level callbacks for the browser process.
-    // It will create the first browser instance in OnContextInitialized() after
-    // CEF has initialized.
-    CefRefPtr<App> app(new App);
+    //</editor-fold>
+    //<editor-fold desc="BrowserSettings">
+    CefBrowserSettings browser_settings;
+    browser_settings.web_security=cef_state_t::STATE_DISABLED;
+    //</editor-fold>
+    CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/",browser_settings,true));
 
     // Initialize CEF.
     CefInitialize(main_args, settings, app.get(), sandbox_info);

@@ -35,7 +35,7 @@ set(DEBUG_BIN
 set(RESOURCE_SRC
         ${PROJECT_SOURCE_DIR}/cef_lib/Resources)
 set(TEST_HTML
-        ${PROJECT_SOURCE_DIR}/ext/test.html)
+        ${PROJECT_SOURCE_DIR}/ext/index.html)
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -mwindows)
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
@@ -49,7 +49,7 @@ add_executable(cef
         life_span_handler.h
         resource.h
         app.rc
-        helper_win.cpp helper_win.h debug.h)
+        helper_win.cpp helper_win.h debug.h go_server.cpp go_server.h)
 
 target_link_libraries(cef ${EXTRA_LIBS})
 #[[if (CMAKE_BUILD_TYPE_DEBUG)
