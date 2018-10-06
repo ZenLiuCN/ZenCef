@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
-
 set(CMAKE_CXX_STANDARD 14)
+# USE CLANG
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_C_COMPILER "clang.exe")
+set(CMAKE_CXX_COMPILER "clang++.exe")
+# target i686-pc-windows-gnu for 32bit x86_64-pc-windows-gnu for64
+set(CLANG_COVERAGE_COMPILE_FLAGS "-target i686-pc-windows-gnu")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${CLANG_COVERAGE_COMPILE_FLAGS}" )
+
+set(MINGW32LIB D:/Dev/env/mingw/mingw32v6/i686-w64-mingw32/lib/)
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
 include_directories(${PROJECT_SOURCE_DIR}/goserver)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
@@ -31,7 +39,7 @@ set(TEST_HTML
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -mwindows)
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
-link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a D:/Dev/env/mingw/mingw32/i686-w64-mingw32/lib/libwinmm.a D:/Dev/env/mingw/mingw32/i686-w64-mingw32/lib/libws2_32.a)
+link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
 add_executable(cef
         main_win.cc
         app.cc
