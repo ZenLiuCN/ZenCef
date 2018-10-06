@@ -52,6 +52,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     auto hwnd = GetConsoleWindow();
     LOGGER_("hidden console window %p", hwnd);
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
+
+
     //</editor-fold>
     //<editor-fold desc="CefSettings">
     CefSettings settings;

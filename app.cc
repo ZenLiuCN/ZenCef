@@ -5,6 +5,7 @@
 // can be found in the LICENSE file.
 
 #include "app.h"
+#include "resource.h"
 
 
 App::App(std::string root, std::string port, std::string url, CefBrowserSettings browser_settings, bool enableFlash) {
@@ -59,7 +60,11 @@ void App::OnContextInitialized() {
     HWND win = br->GetHost()->GetWindowHandle();
     SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) ^ (WS_CAPTION));
     SetWindowPos(win, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
-
+    //<editor-fold desc="SetIconFromBrowserWindow">
+    HICON ico=LoadIcon(GetModuleHandle(nullptr),MAKEINTRESOURCE(IDI_CEFSIMPLE));
+    SendMessage(win,WM_SETICON,ICON_BIG,(LPARAM)ico);
+    SendMessage(win,WM_SETICON,ICON_SMALL,(LPARAM)ico);
+    //</editor-fold>
 #ifndef DEBUG
     LOGGER_("get browser window handler %p", win)
     go->setDebug(1);
