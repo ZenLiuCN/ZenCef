@@ -49,6 +49,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     //</editor-fold>
     //<editor-fold desc="Hidden console Window">
     setlocale(LC_ALL, "");
+//    system("chcp 65001");
+//    SetConsoleCP(65001);
+
     auto hwnd = GetConsoleWindow();
     LOGGER_("hidden console window %p", hwnd);
     SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
@@ -60,6 +63,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     settings.remote_debugging_port = 9222;
     settings.ignore_certificate_errors = 1;
 
+
 #if !defined(CEF_USE_SANDBOX)
     settings.no_sandbox = true;
 #endif
@@ -67,6 +71,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     //<editor-fold desc="BrowserSettings">
     CefBrowserSettings browser_settings;
     browser_settings.web_security=cef_state_t::STATE_DISABLED;
+    browser_settings.universal_access_from_file_urls=STATE_ENABLED;
     //</editor-fold>
     CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/",browser_settings,true));
 

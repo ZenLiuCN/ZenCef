@@ -2,46 +2,38 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "life_span_handler.h"
 
-#include <sstream>
-#include <string>
-
-#include "include/base/cef_bind.h"
-#include "include/cef_app.h"
-#include "include/wrapper/cef_closure_task.h"
-#include "include/wrapper/cef_helpers.h"
-#include "app.h"
+#include "client.h"
 
 namespace {
 
-    LifeSpanHandler *g_instance = nullptr;
+    Client *g_instance = nullptr;
 
 }  // namespace
 
-LifeSpanHandler::LifeSpanHandler()
+Client::Client()
         : is_closing_(false) {
     DCHECK(!g_instance);
     g_instance = this;
 }
 
-LifeSpanHandler::~LifeSpanHandler() {
+Client::~Client() {
     g_instance = nullptr;
 }
 
 // static
-LifeSpanHandler *LifeSpanHandler::GetInstance() {
+Client *Client::GetInstance() {
     return g_instance;
 }
 
-void LifeSpanHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
+void Client::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
 
     // Add to the list of existing browsers.
     browser_list_.push_back(browser);
 }
 
-bool LifeSpanHandler::DoClose(CefRefPtr<CefBrowser> browser) {
+bool Client::DoClose(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
 
     // Closing the main window requires special handling. See the DoClose()
@@ -57,7 +49,7 @@ bool LifeSpanHandler::DoClose(CefRefPtr<CefBrowser> browser) {
     return false;
 }
 
-void LifeSpanHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+void Client::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
 
     // Remove from the list of existing browsers.
@@ -75,11 +67,11 @@ void LifeSpanHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
     }
 }
 
-void LifeSpanHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
-                             CefRefPtr<CefFrame> frame,
-                             ErrorCode errorCode,
-                             const CefString &errorText,
-                             const CefString &failedUrl) {
+void Client::OnLoadError(CefRefPtr<CefBrowser> browser,
+                         CefRefPtr<CefFrame> frame,
+                         ErrorCode errorCode,
+                         const CefString &errorText,
+                         const CefString &failedUrl) {
     CEF_REQUIRE_UI_THREAD();
 
     // Don't display an error for downloaded files.
@@ -95,11 +87,10 @@ void LifeSpanHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
     frame->LoadString(ss.str(), failedUrl);
 }
 
-void LifeSpanHandler::CloseAllBrowsers(bool force_close) {
+void Client::CloseAllBrowsers(bool force_close) {
     if (!CefCurrentlyOn(TID_UI)) {
         // Execute on the UI thread.
-        CefPostTask(TID_UI,
-                    base::Bind(&LifeSpanHandler::CloseAllBrowsers, this, force_close));
+        CefPostTask(TID_UI, base::Bind(&Client::CloseAllBrowsers, this, force_close));
         return;
     }
 
@@ -112,7 +103,36 @@ void LifeSpanHandler::CloseAllBrowsers(bool force_close) {
 }
 
 
-bool LifeSpanHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
-                                  int line) {
-    return App::OnConsoleMessage(browser, message, source, line);
+bool Client::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                              const CefString &message, const CefString &source,
+                              int line) {
+
+    goConsoleLogger(cefSourceToString(message), cefSourceToString(source), line);
+    return false;
 }
+
+void Client::OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                                 CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
+    model->Clear();
+#ifdef DEBUG
+    model->AddItem(MENU_SHOW_DEV_TOOLS, "开发者选项");
+#endif
+//    CefContextMenuHandler::OnBeforeContextMenu(browser, frame, params, model);
+}
+
+bool Client::OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                                  CefRefPtr<CefContextMenuParams> params, int command_id,
+                                  CefContextMenuHandler::EventFlags event_flags) {
+
+    switch (command_id) {
+        case (int) MENU_SHOW_DEV_TOOLS:
+            ShowDevTool(browser);
+            return true;
+        default:
+            return false;
+    }
+    // return CefContextMenuHandler::OnContextMenuCommand(browser, frame, params, command_id, event_flags);
+}
+
+
+

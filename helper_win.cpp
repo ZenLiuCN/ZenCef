@@ -20,7 +20,6 @@ string GetAppDir() {
 }
 
 
-
 cef_string_utf8_t *cefSourceToString(const CefString *source) {
     cef_string_utf8_t *output = cef_string_userfree_utf8_alloc();
     if (source == nullptr) {
@@ -28,4 +27,13 @@ cef_string_utf8_t *cefSourceToString(const CefString *source) {
     }
     cef_string_to_utf8(source->GetStruct()->str, source->GetStruct()->length, output);
     return output;
+}
+
+char *cefSourceToString(const CefString &source) {
+    cef_string_utf8_t *output = cef_string_userfree_utf8_alloc();
+    if (source.empty()) {
+        return nullptr;
+    }
+    cef_string_to_utf8(source.GetStruct()->str, source.GetStruct()->length, output);
+    return output->str;
 }

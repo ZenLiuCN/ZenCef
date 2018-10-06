@@ -44,12 +44,12 @@ add_executable(cef
         main_win.cc
         app.cc
         app.h
-        life_span_handler.cc
-        life_span_handler_win.cc
-        life_span_handler.h
+        client.cc
+        client_win.cc
+        client.h
         resource.h
         app.rc
-        helper_win.cpp helper_win.h debug.h go_server.cpp go_server.h)
+        helper_win.cpp helper_win.h debug.h go_server.cpp go_server.h keycodes.h WindowSchemeHandler.cpp WindowSchemeHandler.h)
 
 target_link_libraries(cef ${EXTRA_LIBS})
 #[[if (CMAKE_BUILD_TYPE_DEBUG)

@@ -6,6 +6,7 @@
 
 #include "app.h"
 #include "resource.h"
+#include "WindowSchemeHandler.h"
 
 
 App::App(std::string root, std::string port, std::string url, CefBrowserSettings browser_settings, bool enableFlash) {
@@ -18,6 +19,7 @@ App::App(std::string root, std::string port, std::string url, CefBrowserSettings
 };
 
 void App::OnContextInitialized() {
+
     CEF_REQUIRE_UI_THREAD();
 
     // Information used when creating the native window.
@@ -30,7 +32,7 @@ void App::OnContextInitialized() {
 #endif
 
     // LifeSpanHandler implements browser-level callbacks.
-    CefRefPtr<LifeSpanHandler> handler(new LifeSpanHandler());
+    CefRefPtr<Client> handler(new Client());
 
     std::string url, port, dir, flash;
 
@@ -77,7 +79,7 @@ void App::OnContextInitialized() {
         go->enableHttpServer(dir);
 
     go->start(port);
-
+    CefRegisterSchemeHandlerFactory("window","local",new WindowSchemeHandlerFactory(win));
 }
 
 //TODO 2018-10-5 14:42 Zen Liu: NOT EFFECTED
@@ -88,14 +90,12 @@ void App::OnWebKitInitialized() {
 //    CefRenderProcessHandler::OnWebKitInitialized();
 }
 
-bool App::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
-                           int line) {
-    auto msg = cefSourceToString(&message);
-    auto src = cefSourceToString(&source);
-    goConsoleLogger(msg->str, src->str, line);
-//    CONSOLE_LOGGER_(message.ToString16().c_str());
-    return false;
+void App::OnRegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar) {
+    registrar->AddCustomScheme("window:", true,true,false);
+
+//    CefApp::OnRegisterCustomSchemes(registrar);
 }
+
 
 void App::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) {
     if (enableFlash) {

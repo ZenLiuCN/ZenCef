@@ -7,7 +7,7 @@
 
 #include "include/cef_app.h"
 #include "go_server.h"
-#include "life_span_handler.h"
+#include "client.h"
 #include "helper_win.h"
 #include "debug.h"
 #include <include/wrapper/cef_helpers.h>
@@ -32,8 +32,9 @@ public:
     void OnContextInitialized() OVERRIDE;
 
     void OnWebKitInitialized() OVERRIDE;
-     static bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
-                                  int line);
+
+    void OnRegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar) override;
+
 private:
     GoServer* go;
     std::string uri;
