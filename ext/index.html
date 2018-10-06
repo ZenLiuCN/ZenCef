@@ -1,38 +1,111 @@
 <html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <script>console.log("loaded")</script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" href="materialize.min.css"/>
+    <link rel="stylesheet" href="material-icons.css"/>
     <script>
         console.log("init for script");
         //this part also in ext.js
-        var WinObj;WinObj||(WinObj={});(function(){WinObj.wss="ws://"+document.location.host+(document.location.port?"":(":"+document.location.port))+"/win";WinObj.WinWS=new WebSocket(WinObj.wss);WinObj.WinWS.onopen=function(){WinObj.frame(1)};WinObj.close=function(){WinObj.WinWS.send("win:close")};WinObj.full=function(){WinObj.WinWS.send("win:full")};WinObj.topMost=function(a){WinObj.WinWS.send("win:topMost:"+a)};WinObj.max=function(){WinObj.WinWS.send("win:max")};WinObj.min=function(){WinObj.WinWS.send("win:min")};WinObj.restore=function(){WinObj.WinWS.send("win:restore")};WinObj.frame=function(a){WinObj.WinWS.send("win:frame:"+a)};WinObj.drag=function(a,e){a?WinObj.WinWS.send("win:drag:start|"+e.x+"|"+e.y):WinObj.WinWS.send("win:drag:stop")};WinObj.onMouseMove=function(a){eve=window.event||ev;eve.button===0?WinObj.WinWS.send("win:drag:move|"+eve.screenX+"|"+eve.screenY):""};WinObj.onDrag=function dragOn(e){WinObj.drag(true,e);document.addEventListener("mousemove",WinObj.onMouseMove,true)};WinObj.offDrag=function dragOff(){WinObj.drag(false);document.removeEventListener("mousemove",WinObj.onMouseMove,true)}})();
+        var WinObj;
+        WinObj || (WinObj = {});
+        (function () {
+            WinObj.wss = "ws://" + document.location.host + (document.location.port ? "" : (":" + document.location.port)) + "/win";
+            WinObj.WinWS = new WebSocket(WinObj.wss);
+            WinObj.WinWS.onopen = function () {
+                WinObj.frame(1)
+            };
+            WinObj.close = function () {
+                WinObj.WinWS.send("win:close")
+            };
+            WinObj.full = function () {
+                WinObj.WinWS.send("win:full")
+            };
+            WinObj.topMost = function (a) {
+                WinObj.WinWS.send("win:topMost:" + a)
+            };
+            WinObj.max = function () {
+                WinObj.WinWS.send("win:max")
+            };
+            WinObj.min = function () {
+                WinObj.WinWS.send("win:min")
+            };
+            WinObj.restore = function () {
+                WinObj.WinWS.send("win:restore")
+            };
+            WinObj.frame = function (a) {
+                WinObj.WinWS.send("win:frame:" + a)
+            };
+            WinObj.drag = function (a, e) {
+                a ? WinObj.WinWS.send("win:drag:start|" + e.x + "|" + e.y) : WinObj.WinWS.send("win:drag:stop")
+            };
+            WinObj.onMouseMove = function (a) {
+                eve = window.event || ev;
+                eve.button === 0 ? WinObj.WinWS.send("win:drag:move|" + eve.screenX + "|" + eve.screenY) : ""
+            };
+            WinObj.onDrag = function dragOn(e) {
+                WinObj.drag(true, e);
+                document.addEventListener("mousemove", WinObj.onMouseMove, true)
+            };
+            WinObj.offDrag = function dragOff() {
+                WinObj.drag(false);
+                document.removeEventListener("mousemove", WinObj.onMouseMove, true)
+            }
+        })();
         (function () {
             console.log("加载完成测试")
         })();
     </script>
 </head>
 <body>
-<h1>this is a test to window control</h1>
-<div>
+<nav>
+    <div class="nav-wrapper">
+        <a href="#" class="brand-logo right">Test</a>
+        <ul id="nav-mobile" class="center hide-on-med-and-down">
+            <li><a onmousedown="WinObj.onDrag(event)" onmouseup="WinObj.offDrag()" title="drag window"><i class="material-icons">center_focus_weak</i>drag </a></li>
+            <li><a title="maximize" onclick="WinObj.max()"> <i class="material-icons">launch</i>maximize </a></li>
+            <li><a  title="minimize" onclick="WinObj.min()"> <i class="material-icons">system_update_alt</i>minimize</a></li>
+            <li><a onclick="WinObj.restore()"> <i class="material-icons">open_in_browser</i> restore</a></li>
+            <li><a onclick="WinObj.close()"> <i class="material-icons">close</i>close</a></li>
+            <li><a onclick="WinObj.full()"> <i class="material-icons">fullscreen</i>fullscreen</a></li>
+            <li><a onclick="WinObj.topMost(true)"> <i class="material-icons">place</i>topMost</a></li>
+            <li><a onclick="WinObj.topMost(false)"> <i class="material-icons">picture_in_picture_alt</i> NoneTopMost</a></li>
+            <li><a onclick="WinObj.frame(0)"> <i class="material-icons">border_all</i>frame-full</a></li>
+            <li><a onclick="WinObj.frame(1)"> <i class="material-icons">view_headline</i>frame-thin</a></li>
+            <li><a onclick="WinObj.frame(2)"> <i class="material-icons">border_clear</i>frame-less</a></li>
+            <li><a onclick="WinObj.frame(3)"><i class="material-icons">crop_free</i>frame-less-full</a></li>
 
-    <button onclick="WinObj.max()">max</button>
-    <button onclick="WinObj.min()">min</button>
-    <button onclick="WinObj.restore()">restore</button>
-    <button onclick="WinObj.close()">close</button>
-    <button onclick="WinObj.full()">full</button>
-    <button onclick="WinObj.topMost(true)">topMost</button>
-    <button onclick="WinObj.topMost(false)">NoTopMost</button>
-    <button onclick="WinObj.frame(0)">frame-full</button>
-    <button onclick="WinObj.frame(1)">frame-thin</button>
-    <button onclick="WinObj.frame(2)">frame-less</button>
-    <button onclick="WinObj.frame(3)">frame-full-top</button>
-    <button onmousedown="WinObj.onDrag(event)" onmouseup="WinObj.offDrag()">drag</button>
-    <a href="http://news.163.com">163</a>
-    <a href="http://html5test.com">test</a>
-    <a href="http://baidu.com">baidu</a>
-    <a href="http://wanga.me/">wanga-broken TO FIND why</a>
-    <a href="http://dna.yiihuu.com/v/158752.html">flash test</a>
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <div class="col s12 m6">
+            <div class="card blue">
+                <div class="card-content white-text">
+                    <span class="card-title">web site test</span>
+                    <ul class="collection blue">
+                        <li class="collection-item"><a href="http://news.163.com">163</a></li>
+                        <li class="collection-item"><a href="http://html5test.com">test</a></li>
+                        <li class="collection-item"><a href="http://baidu.com">baidu</a></li>
+                        <li class="collection-item"><a href="http://wanga.me/">wanga-broken TO FIND why</a></li>
+                        <li class="collection-item"><a href="http://dna.yiihuu.com/v/158752.html">flash test</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="input-field col s12">
+            <i class="material-icons prefix" style="cursor: pointer"
+               onclick="document.location.href=document.getElementById('uri').value">search</i>
+            <input placeholder="" id="uri" type="text" class="validate">
+            <label for="uri">url to test</label>
+        </div>
+
+    </div>
 </div>
+
 
 </body>
 </html>
