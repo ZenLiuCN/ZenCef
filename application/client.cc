@@ -18,7 +18,7 @@ Client::~Client() {
 }
 
 // static
-Client *Client::GetInstance() {
+Client *Client::INSTANCE() {
     return g_instance;
 }
 

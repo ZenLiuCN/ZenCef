@@ -31,7 +31,7 @@ public:
                           int line) override;
 
     // Provide access to the single global instance of this object.
-    static Client *GetInstance();
+    static Client *INSTANCE();
 
     //<editor-fold desc="CefClientMethods">
 
@@ -60,6 +60,7 @@ public:
 
     //<editor-fold desc="CefLifeSpanHandler methods">
 
+
     void OnAfterCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
 
     bool DoClose(CefRefPtr<CefBrowser> browser) OVERRIDE;
@@ -87,7 +88,8 @@ public:
 
 
     //<editor-fold desc="CefKeyboardHandlerMethods">
-
+    bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, MSG *os_event,
+                       bool *is_keyboard_shortcut) override;
     bool OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, MSG *os_event) override;
     //</editor-fold>
 

@@ -45,3 +45,12 @@ bool Client::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
     WCHAR_LOGGER_(L"[console]:%ls :%d message:%ls \n", source.ToString16().c_str(), line, message.ToString16().c_str());
     return false;
 }
+
+bool Client::OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, MSG *os_event,
+                           bool *is_keyboard_shortcut) {
+            if(is_keyboard_shortcut&& event.modifiers==EVENTFLAG_ALT_DOWN &&event.windows_key_code==VK_TAB){
+                LOGGER_("get alt_tab")
+                return true;
+            }
+   return CefKeyboardHandler::OnPreKeyEvent(browser, event, os_event, is_keyboard_shortcut);
+}

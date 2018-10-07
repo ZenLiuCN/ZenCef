@@ -80,7 +80,7 @@ void App::OnContextInitialized() {
 
 //TODO 2018-10-5 14:42 Zen Liu: NOT EFFECTED
 void App::OnWebKitInitialized() {
-    auto js = goGetExtJson();
+    auto js = "(function(){var isWIn=true})();";
     LOGGER_("register js code :%s", js)
     CefRegisterExtension("v8/test", CefStringUTF16(js), nullptr);
 //    CefRenderProcessHandler::OnWebKitInitialized();

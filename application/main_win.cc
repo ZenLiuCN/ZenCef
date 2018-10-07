@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <iostream>
 #include "app.h"
+#include "RenderApp.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
@@ -36,8 +37,25 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     //<editor-fold desc="SubProcess Start">
     // Provide CEF with command-line arguments.
     CefMainArgs main_args(hInstance);
+    //<editor-fold desc="CefSettings">
+    CefSettings settings;
+    settings.remote_debugging_port = 9222;
+    settings.ignore_certificate_errors = 1;
 
-    int exit_code = CefExecuteProcess(main_args, nullptr, sandbox_info);
+
+#if !defined(CEF_USE_SANDBOX)
+    settings.no_sandbox = true;
+#endif
+    //</editor-fold>
+    //<editor-fold desc="BrowserSettings">
+    CefBrowserSettings browser_settings;
+    browser_settings.web_security = STATE_DISABLED;
+    browser_settings.universal_access_from_file_urls = STATE_ENABLED;
+    browser_settings.file_access_from_file_urls = STATE_ENABLED;
+    //</editor-fold>
+
+    CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/", browser_settings, true));
+    int exit_code = CefExecuteProcess(main_args, app.get(), sandbox_info);
     if (exit_code >= 0) {
         // The sub-process has completed so return here.
         return exit_code;
@@ -51,23 +69,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
 
 
     //</editor-fold>
-    //<editor-fold desc="CefSettings">
-    CefSettings settings;
-    settings.remote_debugging_port = 9222;
-    settings.ignore_certificate_errors = 1;
 
-
-#if !defined(CEF_USE_SANDBOX)
-    settings.no_sandbox = true;
-#endif
-    //</editor-fold>
-    //<editor-fold desc="BrowserSettings">
-    CefBrowserSettings browser_settings;
-    browser_settings.web_security=STATE_DISABLED;
-    browser_settings.universal_access_from_file_urls=STATE_ENABLED;
-    browser_settings.file_access_from_file_urls=STATE_ENABLED;
-    //</editor-fold>
-    CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/",browser_settings,true));
 
     // Initialize CEF.
     CefInitialize(main_args, settings, app.get(), sandbox_info);
