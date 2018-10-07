@@ -12,6 +12,7 @@
 #include "include/base/cef_bind.h"
 #include <include/cef_app.h>
 #include "helper_win.h"
+#include "debug.h"
 #include <list>
 
 enum MenuID {

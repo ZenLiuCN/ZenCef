@@ -48,7 +48,7 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     }
     //</editor-fold>
     //<editor-fold desc="Hidden console Window">
-    setlocale(LC_ALL, "");
+//    setlocale(LC_ALL, "");
 //    system("chcp 65001");
 //    SetConsoleCP(65001);
 

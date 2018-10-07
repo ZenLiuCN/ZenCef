@@ -103,13 +103,7 @@ void Client::CloseAllBrowsers(bool force_close) {
 }
 
 
-bool Client::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                              const CefString &message, const CefString &source,
-                              int line) {
 
-    goConsoleLogger(cefSourceToString(message), cefSourceToString(source), line);
-    return false;
-}
 
 void Client::OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
