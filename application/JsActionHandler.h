@@ -10,8 +10,8 @@
 #include <include/cef_v8.h>
 #include <functional>
 
-typedef std::function<bool(CefRefPtr<CefV8Value>, const CefV8ValueList, CefRefPtr<CefV8Value>, CefString)> V8Handler;
-typedef std::map<CefString, V8Handler> handlers;
+typedef std::function<bool(HWND, int, int)> WinHandler;
+typedef std::map<CefString, WinHandler> handlers;
 
 class JsActionHandler : public CefV8Handler {
 public:
@@ -23,10 +23,10 @@ public:
                  CefRefPtr<CefV8Value> &retval, CefString &exception) override {
         if (this->registry.empty() || this->registry.find(name) == this->registry.end())
             return false;
-        return this->registry[name].operator()(object, arguments, retval, exception);
+        return this->registry[name].operator()(win, 0, 0);
     }
 
-    bool Register(const V8Handler &handler, const CefString &name) {
+    bool Register(const WinHandler &handler, const CefString &name) {
         if (this->registry.find(name) != this->registry.end()) {
             return false;
         }
@@ -41,7 +41,13 @@ public:
         return true;
     }
 
+    static bool WinClose(HWND win, int x, int y) {
+        PostMessage(win, WM_SYSCOMMAND, SC_CLOSE, 0);
+        return true;
+    }
+
 private:
+    HWND win;
     handlers registry;
 IMPLEMENT_REFCOUNTING(JsActionHandler)
 };
@@ -54,7 +60,9 @@ JsActionHandler *JsActionHandler::INSTANCE() {
 }
 
 JsActionHandler::JsActionHandler(HWND win) {
+    this->win = win;
     JSActionHandler::g_handler = this;
+    this->registry["WindowClose"] = JsActionHandler::WinClose;
 
 }
 
