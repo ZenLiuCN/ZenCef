@@ -1,6 +1,3 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
 
 #include "client.h"
 
@@ -45,6 +42,6 @@ void Client::ShowDevTool(const CefRefPtr<CefBrowser> browser) {
 bool Client::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
                               const CefString &message, const CefString &source,
                               int line) {
-    WLOGGER_(L"[console]:%ls :%d message:%ls \n", source.ToString16().c_str(), line, message.ToString16().c_str());
+    WCHAR_LOGGER_(L"[console]:%ls :%d message:%ls \n", source.ToString16().c_str(), line, message.ToString16().c_str());
     return false;
 }

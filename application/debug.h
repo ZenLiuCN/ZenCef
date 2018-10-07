@@ -2,8 +2,8 @@
 // Created by Zen Liu on 2018-10-5.
 //
 
-#ifndef PROJECT_DEBUG_H
-#define PROJECT_DEBUG_H
+#ifndef ZEN_CEF_DEBUG_H
+#define ZEN_CEF_DEBUG_H
 
 #include <time.h>
 #include <fcntl.h>
@@ -26,7 +26,7 @@
     snprintf(str2, 4096, format, ##__VA_ARGS__);\
     printf(" %s\n", str2);\
     }
-#define WLOGGER_(format, ...){\
+#define WCHAR_LOGGER_(format, ...){\
     LOG_INFO();\
     wchar_t str2[4096 + 1];\
     snwprintf(str2, 4096, format, ##__VA_ARGS__);\
@@ -44,4 +44,4 @@
 goLog(const_cast<char*>(fl.c_str()),__LINE__, const_cast<char *>(fn.c_str()), const_cast<char*>(f.c_str()),const_cast<char*>(m.c_str()));\
     }
 #endif
-#endif //PROJECT_DEBUG_H
+#endif //ZEN_CEF_DEBUG_H

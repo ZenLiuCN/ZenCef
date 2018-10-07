@@ -2,9 +2,6 @@
 // Created by Zen Liu on 2018-10-5.
 //
 
-
-
-
 #include "helper_win.h"
 
 using namespace std;

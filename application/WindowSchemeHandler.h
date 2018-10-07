@@ -2,13 +2,16 @@
 // Created by Zen Liu on 2018-10-6.
 //
 
-#ifndef PROJECT_WINDOW_SCHEME_HANDLER_H
-#define PROJECT_WINDOW_SCHEME_HANDLER_H
+#ifndef ZEN_CEF_WINDOW_SCHEME_HANDLER_H
+#define ZEN_CEF_WINDOW_SCHEME_HANDLER_H
 
 #include <include/cef_scheme.h>
 #include "debug.h"
 #include "helper_win.h"
-
+#include "helpers.h"
+#include <include/wrapper/cef_helpers.h>
+#include "include/wrapper/cef_closure_task.h"
+#include "include/base/cef_bind.h"
 class WindowSchemeHandler : public CefResourceHandler {
 public:
     explicit WindowSchemeHandler(HWND win);
@@ -21,8 +24,18 @@ public:
 
     void Cancel() override;
 
+    bool CanGetCookie(const CefCookie &cookie) override;
+
+    bool CanSetCookie(const CefCookie &cookie) override;
+    void HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback);
 private:
     HWND win;
+    bool drag = false;
+    bool top = false;
+    int mx = GetSystemMetrics(SM_CXSCREEN);
+    int my = GetSystemMetrics(SM_CYSCREEN);
+    RECT rc;
+    POINT lastPos;
 IMPLEMENT_REFCOUNTING(WindowSchemeHandler)
 };
 
@@ -37,7 +50,8 @@ public:
 
 private:
     HWND win;
+
 IMPLEMENT_REFCOUNTING(WindowSchemeHandlerFactory)
 };
 
-#endif //PROJECT_WINDOW_SCHEME_HANDLER_H
+#endif //ZEN_CEF_WINDOW_SCHEME_HANDLER_H

@@ -1,7 +1,3 @@
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
-
 #include <windows.h>
 #include <iostream>
 #include "app.h"
@@ -48,9 +44,6 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     }
     //</editor-fold>
     //<editor-fold desc="Hidden console Window">
-//    setlocale(LC_ALL, "");
-//    system("chcp 65001");
-//    SetConsoleCP(65001);
 
     auto hwnd = GetConsoleWindow();
     LOGGER_("hidden console window %p", hwnd);
@@ -70,8 +63,9 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     //</editor-fold>
     //<editor-fold desc="BrowserSettings">
     CefBrowserSettings browser_settings;
-    browser_settings.web_security=cef_state_t::STATE_DISABLED;
+    browser_settings.web_security=STATE_DISABLED;
     browser_settings.universal_access_from_file_urls=STATE_ENABLED;
+    browser_settings.file_access_from_file_urls=STATE_ENABLED;
     //</editor-fold>
     CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/",browser_settings,true));
 

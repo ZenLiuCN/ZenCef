@@ -1,12 +1,7 @@
-
-
-// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
-
 #include "app.h"
 #include "resource.h"
 #include "WindowSchemeHandler.h"
+#include "WebSocketSchemeHandler.h"
 
 
 App::App(std::string root, std::string port, std::string url, CefBrowserSettings browser_settings, bool enableFlash) {
@@ -63,7 +58,7 @@ void App::OnContextInitialized() {
     SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) ^ (WS_CAPTION));
     SetWindowPos(win, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
     //<editor-fold desc="SetIconFromBrowserWindow">
-    HICON ico=LoadIcon(GetModuleHandle(nullptr),MAKEINTRESOURCE(IDI_CEFSIMPLE));
+    HICON ico=LoadIcon(GetModuleHandle(nullptr),MAKEINTRESOURCE(IDI_BIG));
     SendMessage(win,WM_SETICON,ICON_BIG,(LPARAM)ico);
     SendMessage(win,WM_SETICON,ICON_SMALL,(LPARAM)ico);
     //</editor-fold>
@@ -77,9 +72,10 @@ void App::OnContextInitialized() {
 
     if (!dir.empty())
         go->enableHttpServer(dir);
-
+//    go->startInnerWs(win,stoi(port));
     go->start(port);
     CefRegisterSchemeHandlerFactory("window","local",new WindowSchemeHandlerFactory(win));
+    CefRegisterSchemeHandlerFactory("ws","window",new WebSocketSchemeHandlerFactory());
 }
 
 //TODO 2018-10-5 14:42 Zen Liu: NOT EFFECTED

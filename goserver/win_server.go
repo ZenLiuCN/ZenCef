@@ -19,13 +19,6 @@ var (
 	apiSrv        *http.Server
 	service       = make(map[string]bool)
 	serverRunning = false
-	rc            *RECT
-	lastLBPos     *POINT
-	win           HWND
-	top           = false
-	drag          = false
-	mx            = GetSystemMetrics(SM_CXSCREEN)
-	my            = GetSystemMetrics(SM_CXSCREEN)
 )
 
 //export goStopServer
@@ -36,16 +29,6 @@ func goStopServer() {
 		}
 	}
 	apiSrv.Close()
-}
-
-//export goSetHwnd
-func goSetHwnd(hwnd C.HWND) {
-	if debug != 0 {
-		if debug != 0 {
-			logger.Println("called goSetHwnd")
-		}
-	}
-	win = HWND(unsafe.Pointer(hwnd))
 }
 
 //export goGetExtJson
@@ -68,30 +51,87 @@ func goIsServerStarted() int {
 //export goUseHttpServer
 func goUseHttpServer(root *C.char) int {
 	dir := C.GoString(root)
-	if debug!=0{
-		logger.Printf("will enable http service of %s ",dir)
+	if debug != 0 {
+		logger.Printf("will enable http service of %s ", dir)
 	}
 	if i, e := os.Stat(dir); e != nil {
-		if debug!=0{
-			logger.Printf("check dir error: %s ",e)
+		if debug != 0 {
+			logger.Printf("check dir error: %s ", e)
 		}
 		return 0
 	} else if !i.IsDir() {
-		if debug!=0{
-			logger.Printf("check dir error: not dir of %s ",i)
+		if debug != 0 {
+			logger.Printf("check dir error: not dir of %s ", i)
 		}
 		return -1
 	}
-	if debug!=0{
-		logger.Printf("enable http service of %s ",dir)
+	if debug != 0 {
+		logger.Printf("enable http service of %s ", dir)
 	}
 	http.Handle("/", http.FileServer(http.Dir(dir)))
 	service["dir"] = true
 	return 1
 }
+
+//export goRunSchemeCommand
+func goRunSchemeCommand(url *C.char) {
+	uri := C.GoString(url)
+	act := strings.Split(strings.Replace(strings.ToLower(uri), "window://", "", -1), "/")
+	if debug != 0 {
+		logger.Printf("scheme command  %s \n", act)
+	}
+	if len(act) == 0 {
+		logger.Printf("scheme command of  %s  is empty\n", uri)
+		return
+	}
+	if win == HWND(0) {
+		logger.Printf("scheme command %s not set window handler of %p \n", uri, unsafe.Pointer(win))
+		return
+	}
+	switch act[0] {
+	case "close":
+		setClose()
+	case "full":
+		setFullWindow()
+	case "max":
+		setMaximize()
+	case "min":
+		setMinimize()
+	case "restore":
+		setRestore()
+	case "topmost":
+		setTopMost()
+	case "nonetop":
+		setNoneTop()
+	case "drag":
+		setBeginDrag()
+	case "drop":
+		setEndDrag()
+	case "move":
+		if len(act) == 3 {
+			X, e1 := strconv.Atoi(act[1])
+			Y, e2 := strconv.Atoi(act[2])
+			if e1 != nil || e2 != nil {
+				return
+			}
+			doMoveWindow(X, Y)
+		}
+	case "thin":
+		setFrameThin()
+	case "normal":
+		setFrameNormal()
+	case "less":
+		setFrameLess()
+	case "fullscreen":
+		setFullTopScreenMode()
+	default:
+		return
+	}
+}
+
 //export goUserApiServer
-func goUserApiServer()  {
-	if debug!=0{
+func goUserApiServer() {
+	if debug != 0 {
 		logger.Println("enable api service")
 	}
 	http.HandleFunc("/win", func(w http.ResponseWriter, r *http.Request) {
@@ -119,79 +159,42 @@ func goUserApiServer()  {
 				cmd := string(bits[:bytes.IndexByte(bits, 0)])
 				switch {
 				case cmd == "win:full":
-					MoveWindow(win, 0, 0, mx, my, true)
-				case cmd == "win:topMost:true":
-					rc = new(RECT)
-					GetWindowRect(win, rc)
-					top = true
-					SetWindowPos(win, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE)
-				case cmd == "win:topMost:false":
-					rc = new(RECT)
-					GetWindowRect(win, rc)
-					SetWindowPos(win, HWND_NOTOPMOST, rc.Left, rc.Top, rc.Right-rc.Left, rc.Bottom-rc.Top, SWP_SHOWWINDOW&^SWP_NOMOVE&^SWP_NOSIZE)
-					top = false
+					setFullWindow()
+				case cmd == "win:topmost":
+					setTopMost()
+				case cmd == "win:nonetop":
+					setNoneTop()
 				case cmd == "win:close":
-					PostMessage(win, WM_SYSCOMMAND, SC_CLOSE, 0)
+					setClose()
 				case cmd == "win:max":
-					PostMessage(win, WM_SYSCOMMAND, SC_MAXIMIZE, 0)
+					setMaximize()
 				case cmd == "win:min":
-					PostMessage(win, WM_SYSCOMMAND, SC_MINIMIZE, 0)
-				case cmd == "win:frame:0":
-					SetWindowLong(win, GWL_STYLE, WS_OVERLAPPEDWINDOW|WS_THICKFRAME|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|WS_MAXIMIZEBOX)
-					SetWindowPos(win, HWND(0), 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
-					ShowWindow(win, SW_SHOW)
-				case cmd == "win:frame:1":
-					SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) & ^WS_CAPTION|WS_THICKFRAME)
-					SetWindowPos(win, HWND(0), 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
-				case cmd == "win:frame:2":
-					SetWindowLong(win, GWL_STYLE, WS_OVERLAPPED|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS)
-					SetWindowPos(win, HWND(0), 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
-				case cmd == "win:frame:3":
-					SetWindowLong(win, GWL_STYLE, WS_OVERLAPPED|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS)
-					rc = new(RECT)
-					GetWindowRect(win, rc)
-					top = true
-					MoveWindow(win, 0, 0, mx, my, true)
-					SetWindowPos(win, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED)
+					setMinimize()
+				case cmd == "win:normal":
+					setFrameNormal()
+				case cmd == "win:thin":
+					setFrameThin()
+				case cmd == "win:less":
+					setFrameLess()
+				case cmd == "win:fullscreen":
+					setFullTopScreenMode();
 				case cmd == "win:restore":
-					if top && rc != nil {
-						SetWindowPos(win, HWND_NOTOPMOST, rc.Left, rc.Top, rc.Right-rc.Left, rc.Bottom-rc.Top, SWP_SHOWWINDOW&^SWP_NOMOVE&^SWP_NOSIZE)
-						top = false
-					} else {
-						PostMessage(win, WM_SYSCOMMAND, SC_RESTORE, 0)
-					}
-				case strings.HasPrefix(cmd, "win:drag:start"):
-					drag = true
-					lastLBPos = new(POINT)
-					GetCursorPos(lastLBPos)
-					//if debug!=0{logger.Println(lastLBPos)}
-					//ScreenToClient(win, lastLBPos)
-				case strings.HasPrefix(cmd, "win:drag:move|"):
+					setRestore()
+				case strings.HasPrefix(cmd, "win:drag"):
+					setBeginDrag()
+				case strings.HasPrefix(cmd, "win:move|"):
 					//if drag && (last == nil || last.Add(bottle).After(time.Now())) {
-					if drag {
-						ptr := strings.Split(cmd, "|")
-						X, _ := strconv.Atoi(ptr[1])
-						Y, _ := strconv.Atoi(ptr[2])
-						ox := int32(X) - lastLBPos.X
-						oy := int32(Y) - lastLBPos.Y
-						tx := lastLBPos.X + ox
-						ty := lastLBPos.Y + oy
-						re := new(RECT)
-						GetWindowRect(win, re)
-						if ox != 0 || oy != 0 {
-							OffsetRect(re, int32(ox), int32(oy))
-							if tx > mx || ty > my || tx < 0 || ty < 0 {
-								SetCursorPos(lastLBPos.X, lastLBPos.Y)
-								continue
-							}
-							MoveWindow(win, re.Left, re.Top, re.Right-re.Left, re.Bottom-re.Top, false)
-							lastLBPos.X = lastLBPos.X + ox
-							lastLBPos.Y = lastLBPos.Y + oy
-							SetCursorPos(lastLBPos.X, lastLBPos.Y)
-						}
+					ptr := strings.Split(cmd, "|")
+					X, e1 := strconv.Atoi(ptr[1])
+					Y, e2 := strconv.Atoi(ptr[2])
+					if e1 != nil || e2 != nil {
+						continue
 					}
-				case cmd == "win:drag:stop":
-					drag = false
+					if doMoveWindow(X, Y) {
+						continue
+					}
+				case cmd == "win:drop":
+					setEndDrag()
 				}
 			case websocket.CloseMessage:
 				return
@@ -204,6 +207,7 @@ func goUserApiServer()  {
 	})
 	service["win"] = true
 }
+
 //export goStartServer
 func goStartServer(port *C.char) {
 	if debug != 0 {

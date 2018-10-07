@@ -4,6 +4,7 @@
 
 #include "go_server.h"
 
+
 void GoServer::start(std::string port) {
     goStartServer(const_cast<char *>(port.c_str()));
 }
@@ -28,6 +29,14 @@ GoServer::~GoServer() {
 void GoServer::setDebug(int i) {
     goSetDebug(i);
 }
+
+void GoServer::runSchemeCommand(std::string url) {
+    goRunSchemeCommand(const_cast<char *>(url.c_str()));
+}
+
+/*void GoServer::startInnerWs(HWND win,int port) {
+    this->ws=WebSocketServer(win,port).INSTANCE();
+}*/
 
 GoServer::GoServer() = default;
 

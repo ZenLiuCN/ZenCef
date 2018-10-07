@@ -1,17 +1,29 @@
 cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 14)
-# USE CLANG
+
+# ---BEGIN USE CLANG
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_COMPILER "clang.exe")
 set(CMAKE_CXX_COMPILER "clang++.exe")
 # target i686-pc-windows-gnu for 32bit x86_64-pc-windows-gnu for64
 set(CLANG_COVERAGE_COMPILE_FLAGS "-target i686-pc-windows-gnu")
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${CLANG_COVERAGE_COMPILE_FLAGS}" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLANG_COVERAGE_COMPILE_FLAGS}")
+# ---END USE CLANG
+#[[# ---BEGIN USE BOOST
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.68.0 COMPONENTS *boost libraries here*)
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    add_executable(progname file1.cxx file2.cxx)
+    target_link_libraries(progname ${Boost_LIBRARIES})
+endif()
+# ---END USE BOOST]]
 
 set(MINGW32LIB D:/Dev/env/mingw/mingw32v6/i686-w64-mingw32/lib/)
-include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
-include_directories(${PROJECT_SOURCE_DIR}/goserver)
-add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
+
 set(RELEASE_BIN
         ${PROJECT_SOURCE_DIR}/cef_lib/Release/d3dcompiler_43.dll
         ${PROJECT_SOURCE_DIR}/cef_lib/Release/d3dcompiler_47.dll
@@ -38,20 +50,34 @@ set(TEST_HTML
         ${PROJECT_SOURCE_DIR}/ext/index.html)
 
 set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -mwindows)
+
+IF (CMAKE_BUILD_TYPE STREQUAL Debug)
+    ADD_DEFINITIONS(-DDEBUG)
+ENDIF ()
+include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
+include_directories(${PROJECT_SOURCE_DIR}/goserver)
+include_directories(${PROJECT_SOURCE_DIR}/application/)
+#[[# https://github.com/uNetworking/uWebSockets
+include_directories(${PROJECT_SOURCE_DIR}/libs/src/)]]
+add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
+
+
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
 link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
 add_executable(cef
-        main_win.cc
-        app.cc
-        app.h
-        client.cc
-        client_win.cc
-        client.h
-        resource.h
-        app.rc
-        helper_win.cpp helper_win.h debug.h go_server.cpp go_server.h keycodes.h WindowSchemeHandler.cpp WindowSchemeHandler.h)
+        application/main_win.cc
+        application/app.cc application/app.h
+        application/client.cc application/client_win.cc application/client.h
+        application/resource.h
+        application/res/app.rc
+        application/helper_win.cc application/helper_win.h
+        application/debug.h
+#        application/WsServer.hpp
+        application/go_server.cc application/go_server.h
+        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h)
 
 target_link_libraries(cef ${EXTRA_LIBS})
+
 #[[if (CMAKE_BUILD_TYPE_DEBUG)
     foreach(FILE ${DEBUG_BIN})
         add_custom_command(
