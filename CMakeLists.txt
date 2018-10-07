@@ -74,7 +74,7 @@ add_executable(cef
         application/debug.h
 #        application/WsServer.hpp
         application/go_server.cc application/go_server.h
-        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h application/JsActionHandler.h)
+        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h application/JsActionHandler.h JsActionHandler.cpp)
 
 target_link_libraries(cef ${EXTRA_LIBS})
 

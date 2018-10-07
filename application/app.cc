@@ -11,6 +11,7 @@ App::App(std::string root, std::string port, std::string url, CefBrowserSettings
     this->root = std::move(root);
     this->browserSettings = browser_settings;
     this->enableFlash = enableFlash;
+
 };
 
 void App::OnContextInitialized() {
@@ -55,6 +56,7 @@ void App::OnContextInitialized() {
 
     //set window border
     HWND win = br->GetHost()->GetWindowHandle();
+    this->handler=new JsActionHandler(win);
     SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) ^ (WS_CAPTION));
     SetWindowPos(win, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
     //<editor-fold desc="SetIconFromBrowserWindow">
@@ -80,9 +82,9 @@ void App::OnContextInitialized() {
 
 //TODO 2018-10-5 14:42 Zen Liu: NOT EFFECTED
 void App::OnWebKitInitialized() {
-    auto js = "(function(){var isWIn=true})();";
+/*    auto js = "var WinClose=function(){native function WindowClose();return WindowClose();};";
     LOGGER_("register js code :%s", js)
-    CefRegisterExtension("v8/test", CefStringUTF16(js), nullptr);
+    CefRegisterExtension("v8/test", CefStringUTF16(js), this->handler);*/
 //    CefRenderProcessHandler::OnWebKitInitialized();
 }
 

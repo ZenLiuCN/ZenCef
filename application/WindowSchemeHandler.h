@@ -12,6 +12,10 @@
 #include <include/wrapper/cef_helpers.h>
 #include "include/wrapper/cef_closure_task.h"
 #include "include/base/cef_bind.h"
+typedef struct state {
+    int x;
+    int y;
+}STATE;
 class WindowSchemeHandler : public CefResourceHandler {
 public:
     explicit WindowSchemeHandler(HWND win);
@@ -28,10 +32,10 @@ public:
 
     bool CanSetCookie(const CefCookie &cookie) override;
     void HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback);
+
 private:
     HWND win;
-    bool drag = false;
-    bool top = false;
+    STATE state;
     int mx = GetSystemMetrics(SM_CXSCREEN);
     int my = GetSystemMetrics(SM_CYSCREEN);
     RECT rc;
