@@ -1,7 +1,5 @@
 #include "app.h"
-#include "resource.h"
-#include "WindowSchemeHandler.h"
-#include "WebSocketSchemeHandler.h"
+
 
 
 App::App(std::string root, std::string port, std::string url, CefBrowserSettings browser_settings, bool enableFlash) {
@@ -56,9 +54,11 @@ void App::OnContextInitialized() {
 
     //set window border
     HWND win = br->GetHost()->GetWindowHandle();
-    this->handler=new JsActionHandler(win);
+//    this->handler=new JsActionHandler(win);
+#ifndef DEBUG
     SetWindowLong(win, GWL_STYLE, GetWindowLong(win, GWL_STYLE) ^ (WS_CAPTION));
     SetWindowPos(win, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+#endif
     //<editor-fold desc="SetIconFromBrowserWindow">
     HICON ico=LoadIcon(GetModuleHandle(nullptr),MAKEINTRESOURCE(IDI_BIG));
     SendMessage(win,WM_SETICON,ICON_BIG,(LPARAM)ico);
@@ -75,6 +75,7 @@ void App::OnContextInitialized() {
     if (!dir.empty())
         go->enableHttpServer(dir);
 //    go->startInnerWs(win,stoi(port));
+
     go->start(port);
     CefRegisterSchemeHandlerFactory("window","local",new WindowSchemeHandlerFactory(win));
     CefRegisterSchemeHandlerFactory("ws","window",new WebSocketSchemeHandlerFactory());

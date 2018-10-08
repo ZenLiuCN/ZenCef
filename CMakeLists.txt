@@ -56,7 +56,8 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32 )
 IF (CMAKE_BUILD_TYPE STREQUAL Debug)
     ADD_DEFINITIONS(-DDEBUG)
 ELSE()
-    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
+#    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
+    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows)
 ENDIF ()
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
 include_directories(${PROJECT_SOURCE_DIR}/goserver)
@@ -78,7 +79,7 @@ add_executable(cef
         application/debug.h
 #        application/WsServer.hpp
         application/go_server.cc application/go_server.h
-        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h application/JsActionHandler.h JsActionHandler.cpp)
+        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h application/JsActionHandler.h application/JsActionHandler.cpp)
 
 target_link_libraries(cef ${EXTRA_LIBS})
 

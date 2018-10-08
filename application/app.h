@@ -6,8 +6,11 @@
 #include "client.h"
 #include "helper_win.h"
 #include "debug.h"
-#include "JsActionHandler.h"
+//#include "JsActionHandler.h"
 #include <include/wrapper/cef_helpers.h>
+#include "resource.h"
+#include "WindowSchemeHandler.h"
+#include "WebSocketSchemeHandler.h"
 
 // Implement application-level callbacks for the browser process.
 class App : public CefApp,
@@ -33,7 +36,7 @@ public:
     void OnRegisterCustomSchemes(CefRefPtr<CefSchemeRegistrar> registrar) override;
 
 private:
-    JsActionHandler* handler;
+//    JsActionHandler* handler;
     GoServer* go;
     std::string uri;
     std::string portStr;

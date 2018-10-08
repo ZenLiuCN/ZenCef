@@ -5,7 +5,7 @@
 #ifndef ZEN_CEF_GO_SERVER_H
 #define ZEN_CEF_GO_SERVER_H
 
-#import "goserver.h"
+#include  "goserver.h"
 //#include "WsServer.hpp"
 #include <string>
 

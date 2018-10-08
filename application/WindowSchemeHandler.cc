@@ -24,7 +24,7 @@ bool WindowSchemeHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefPt
         MoveWindow(win, 0, 0, mx, my, true);
 
     } else if (cmd == "restore") {
-        if (state.x!=0) {
+        if (state.x != 0) {
             SetWindowPos(win, HWND_NOTOPMOST, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                          SWP_SHOWWINDOW & (~SWP_NOMOVE) & (~SWP_NOSIZE));
             state.x = 0;
@@ -34,21 +34,21 @@ bool WindowSchemeHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefPt
 
     } else if (cmd == "topmost") {
         GetWindowRect(win, &rc);
-        state.x  = 1;
+        state.x = 1;
         SetWindowPos(win, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 
     } else if (cmd == "nonetop") {
-        if ( state.x ==0) return false;
+        if (state.x == 0) return false;
 
         GetWindowRect(win, &rc);
         SetWindowPos(win, HWND_NOTOPMOST, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                      SWP_SHOWWINDOW & ~SWP_NOMOVE & ~SWP_NOSIZE);
-        state.x  = 0;
+        state.x = 0;
 
     } else if (cmd == "fullscreen") {
         SetWindowLong(win, GWL_STYLE, WS_OVERLAPPED | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         GetWindowRect(win, &rc);
-        state.x  = 1;
+        state.x = 1;
         MoveWindow(win, 0, 0, mx, my, true);
         SetWindowPos(win, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
@@ -68,17 +68,17 @@ bool WindowSchemeHandler::ProcessRequest(CefRefPtr<CefRequest> request, CefRefPt
         SetWindowPos(win, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
 
     } else if (cmd == "drag") {
-        LOGGER_("cmd :%s match %d %d", cmd.c_str(),cmd.find("move") ,  state.y);
+        LOGGER_("cmd :%s match %d %d", cmd.c_str(), cmd.find("move"), state.y);
         state.y = 1;
-        LOGGER_("cmd :%s match %d %d", cmd.c_str(),cmd.find("move") ,  state.y);
+        LOGGER_("cmd :%s match %d %d", cmd.c_str(), cmd.find("move"), state.y);
         GetCursorPos(&lastPos);
     } else if (cmd == "drop") {
-        LOGGER_("cmd :%s match %d  %d", cmd.c_str(),cmd.find("move") ,  state.y);
+        LOGGER_("cmd :%s match %d  %d", cmd.c_str(), cmd.find("move"), state.y);
         state.y = 0;
-        LOGGER_("cmd :%s match %d %d", cmd.c_str(),cmd.find("move") ,  state.y);
+        LOGGER_("cmd :%s match %d %d", cmd.c_str(), cmd.find("move"), state.y);
     } else {
-        LOGGER_("cmd :%s match %d %d", cmd.c_str(),cmd.find("move") ,  state.y);
-        if (cmd.find("move") >= 0 &&   state.y==1) {
+        LOGGER_("cmd :%s match %d %d", cmd.c_str(), cmd.find("move"), state.y);
+        if (cmd.find("move") >= 0 && state.y == 1) {
             LOGGER_("cmd :%s", cmd.c_str());
             auto b = cmd.find('|');
             auto e = cmd.rfind('|');
@@ -163,7 +163,7 @@ void WindowSchemeHandler::HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr
         MoveWindow(win, 0, 0, mx, my, true);
         return;
     } else if (cmd == "restore") {
-        if ( state.x==1) {
+        if (state.x == 1) {
             SetWindowPos(win, HWND_NOTOPMOST, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                          SWP_SHOWWINDOW & (~SWP_NOMOVE) & (~SWP_NOSIZE));
             state.x = 0;
@@ -177,7 +177,7 @@ void WindowSchemeHandler::HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr
         SetWindowPos(win, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         return;
     } else if (cmd == "nonetop") {
-        if (state.x==0)
+        if (state.x == 0)
             return;
         GetWindowRect(win, &rc);
         SetWindowPos(win, HWND_NOTOPMOST, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
@@ -214,7 +214,10 @@ void WindowSchemeHandler::HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr
         state.y = 0;
         return;
     } else {
-        if (cmd.find("move") > 0 && state.x!=0) {
+        callback->Continue();
+        return;
+        //disable scheme move control
+/*        if (cmd.find("move") > 0 && state.x!=0) {
             LOGGER_("cmd :%s", cmd.c_str());
             auto b = cmd.find('|');
             auto e = cmd.rfind('|');
@@ -241,9 +244,9 @@ void WindowSchemeHandler::HandleRequest(CefRefPtr<CefRequest> request, CefRefPtr
             } catch (std::exception &) {
                 return;
             }
-        }
+        }*/
     }
-    callback->Continue();
+
 };
 
 WindowSchemeHandlerFactory::WindowSchemeHandlerFactory(HWND win) {
