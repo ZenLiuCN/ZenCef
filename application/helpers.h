@@ -8,7 +8,7 @@
 #include <include/cef_request.h>
 #include <codecvt>
 #include <locale>
-
+#include <sstream>
 std::wstring DumpRequestContents(const CefRefPtr<CefRequest> &request);
 /**
  * GetUrl from request
