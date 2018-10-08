@@ -49,10 +49,15 @@ set(RESOURCE_SRC
 set(TEST_HTML
         ${PROJECT_SOURCE_DIR}/ext/index.html)
 
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 -mwindows)
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 )
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32 )
+
 
 IF (CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
     ADD_DEFINITIONS(-DDEBUG)
+ELSE()
+    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
 ENDIF ()
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
 include_directories(${PROJECT_SOURCE_DIR}/goserver)
