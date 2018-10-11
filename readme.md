@@ -2,7 +2,7 @@
 this is a project build top on cef3 
 1. contains c++ app (from cef3 offical example)
 2. contains embed go websocket server(expose window action to js)
-3. with MP3,MP4[H.264] supported
+3. with MP3,MP4[H.264] supported(just for test)
 ## WHY
 Being working on some desktop solution need on winXP ;
 
