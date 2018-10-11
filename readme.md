@@ -1,4 +1,7 @@
+<img src='https://raw.githubusercontent.com/ZenLiuCN/ZenCef/master/application/res/zcef.ico'/>
+
 ## 介绍(for None chinese see [below](https://github.com/ZenLiuCN/zcef/#what))
+
 基于 cef 2623[bin包下载](https://github.com/ZenLiuCN/zcef/releases/tag/v0.pre) 混合go 的桌面H5应用环境
 ### 特点
 1. 内置websocket 支持控制窗口(边框全屏等)
