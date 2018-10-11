@@ -9,6 +9,14 @@
 1. mingw32 或者mingw64-32
 2. go 1.10 32位(支持xp)
 3. 依赖的go包[这里](https://github.com/ZenLiuCN/zcef/#go-libs-depend-on)
+4. cmake
+5. llvm+clang(可选)
+### 编译过程
+1. 下载cef包放到cef_lib下
+2. go get 依赖的go包
+3. 首先编译 target goserver (也可手动go编译`go build -o goserver.a --buildmode=c-archive .`)
+4. 然后cmake 编译 target cef 
+
 ### 应用
 1. 窗口控制
   websocket连接 ws://127.0.0.1:65530/win
