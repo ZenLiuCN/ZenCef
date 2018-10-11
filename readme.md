@@ -1,3 +1,19 @@
+## 介绍(for None chinese see [below](https://github.com/ZenLiuCN/zcef/#what))
+基于 cef 2623[bin包下载](https://github.com/ZenLiuCN/zcef/releases/tag/v0.pre) 混合go 的桌面H5应用环境
+### 特点
+1. 内置websocket 支持控制窗口(边框全屏等)
+2. 内置http服务器支持本地页面服务
+3. 内置websocket 支持本地数据库操作(sqlit3)
+4. ...
+### 编译环境
+1. mingw32 或者mingw64-32
+2. go 1.10 32位(支持xp)
+3. 依赖的go包[这里](https://github.com/ZenLiuCN/zcef/#go-libs-depend-on)
+### 应用
+1. 窗口控制
+  websocket连接 ws://127.0.0.1:65530/win
+ ...待完善
+
 ## WHAT
 this is a project build top on cef3 
 1. contains c++ app (from cef3 offical example)
