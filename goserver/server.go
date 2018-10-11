@@ -5,11 +5,8 @@ package main
 */
 import "C"
 import (
-	"bytes"
-	"github.com/gorilla/websocket"
 	. "github.com/lxn/win"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -46,31 +43,6 @@ func goIsServerStarted() int {
 	} else {
 		return 0
 	}
-}
-
-//export goUseHttpServer
-func goUseHttpServer(root *C.char) int {
-	dir := C.GoString(root)
-	if debug != 0 {
-		logger.Printf("will enable http service of %s ", dir)
-	}
-	if i, e := os.Stat(dir); e != nil {
-		if debug != 0 {
-			logger.Printf("check dir error: %s ", e)
-		}
-		return 0
-	} else if !i.IsDir() {
-		if debug != 0 {
-			logger.Printf("check dir error: not dir of %s ", i)
-		}
-		return -1
-	}
-	if debug != 0 {
-		logger.Printf("enable http service of %s ", dir)
-	}
-	http.Handle("/", http.FileServer(http.Dir(dir)))
-	service["dir"] = true
-	return 1
 }
 
 //export goRunSchemeCommand
@@ -127,85 +99,6 @@ func goRunSchemeCommand(url *C.char) {
 	default:
 		return
 	}
-}
-
-//export goUserApiServer
-func goUserApiServer() {
-	if debug != 0 {
-		logger.Println("enable api service")
-	}
-	http.HandleFunc("/win", func(w http.ResponseWriter, r *http.Request) {
-		var upgrader = websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-			CheckOrigin:     func(r *http.Request) bool { return true },
-		}
-		conn, err := upgrader.Upgrade(w, r, nil)
-		if err != nil {
-			if debug != 0 {
-				logger.Println("ws error :", err)
-			}
-			return
-		}
-		for {
-			messageType, r, err := conn.NextReader()
-			if err != nil {
-				return
-			}
-			switch messageType {
-			case websocket.TextMessage:
-				bits := make([]byte, 1024)
-				r.Read(bits)
-				cmd := string(bits[:bytes.IndexByte(bits, 0)])
-				switch {
-				case cmd == "win:full":
-					setFullWindow()
-				case cmd == "win:topmost":
-					setTopMost()
-				case cmd == "win:nonetop":
-					setNoneTop()
-				case cmd == "win:close":
-					setClose()
-				case cmd == "win:max":
-					setMaximize()
-				case cmd == "win:min":
-					setMinimize()
-				case cmd == "win:normal":
-					setFrameNormal()
-				case cmd == "win:thin":
-					setFrameThin()
-				case cmd == "win:less":
-					setFrameLess()
-				case cmd == "win:fullscreen":
-					setFullTopScreenMode();
-				case cmd == "win:restore":
-					setRestore()
-				case strings.HasPrefix(cmd, "win:drag"):
-					setBeginDrag()
-				case strings.HasPrefix(cmd, "win:move|"):
-					//if drag && (last == nil || last.Add(bottle).After(time.Now())) {
-					ptr := strings.Split(cmd, "|")
-					X, e1 := strconv.Atoi(ptr[1])
-					Y, e2 := strconv.Atoi(ptr[2])
-					if e1 != nil || e2 != nil {
-						continue
-					}
-					if doMoveWindow(X, Y) {
-						continue
-					}
-				case cmd == "win:drop":
-					setEndDrag()
-				}
-			case websocket.CloseMessage:
-				return
-			default:
-				data := make([]byte, 1024)
-				r.Read(data)
-				conn.WriteMessage(messageType, data)
-			}
-		}
-	})
-	service["win"] = true
 }
 
 //export goStartServer

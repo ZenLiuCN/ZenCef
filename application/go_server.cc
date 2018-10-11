@@ -9,8 +9,8 @@ void GoServer::start(std::string port) {
     goStartServer(const_cast<char *>(port.c_str()));
 }
 
-void GoServer::enableApiServer() {
-    goUserApiServer();
+void GoServer::enableWinServer() {
+    goUseWinServer();
 }
 
 int GoServer::enableHttpServer(std::string dir) {
@@ -32,6 +32,10 @@ void GoServer::setDebug(int i) {
 
 void GoServer::runSchemeCommand(std::string url) {
     goRunSchemeCommand(const_cast<char *>(url.c_str()));
+}
+
+void GoServer::enableDBServer() {
+    goUseDBServer();
 }
 
 /*void GoServer::startInnerWs(HWND win,int port) {

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <iostream>
 #include "app.h"
+#include "console_win.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined

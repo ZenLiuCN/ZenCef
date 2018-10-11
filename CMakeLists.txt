@@ -23,7 +23,7 @@ endif()
 # ---END USE BOOST]]
 
 set(MINGW32LIB D:/Dev/env/mingw/mingw32v6/i686-w64-mingw32/lib/)
-
+set(GO D:/Dev/env/golang/go.1.10x32/bin/go.exe)
 set(RELEASE_BIN
         ${PROJECT_SOURCE_DIR}/cef_lib/Release/d3dcompiler_43.dll
         ${PROJECT_SOURCE_DIR}/cef_lib/Release/d3dcompiler_47.dll
@@ -49,15 +49,15 @@ set(RESOURCE_SRC
 set(TEST_HTML
         ${PROJECT_SOURCE_DIR}/ext/index.html)
 
-set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32 )
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32 )
+set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -m32)
+set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32)
 
 
 IF (CMAKE_BUILD_TYPE STREQUAL Debug)
     ADD_DEFINITIONS(-DDEBUG)
-ELSE()
-#    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
-    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows)
+ELSE ()
+    #    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
+    set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} -mwindows)
 ENDIF ()
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
 include_directories(${PROJECT_SOURCE_DIR}/goserver)
@@ -68,6 +68,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
 
 
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
+add_custom_target(goserver
+        COMMAND cd ${PROJECT_SOURCE_DIR}/goserver && ${GO} build -o goserver.a --buildmode=c-archive .
+        )
 link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
 add_executable(cef
         application/main_win.cc
@@ -77,9 +80,12 @@ add_executable(cef
         application/res/app.rc
         application/helper_win.cc application/helper_win.h
         application/debug.h
-#        application/WsServer.hpp
+        #        application/WsServer.hpp
         application/go_server.cc application/go_server.h
-        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc application/WebSocketSchemeHandler.h application/JsActionHandler.h application/JsActionHandler.cpp)
+        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h
+        application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc
+        application/WebSocketSchemeHandler.h application/JsActionHandler.h
+        application/JsActionHandler.cpp application/console_win.h)
 
 target_link_libraries(cef ${EXTRA_LIBS})
 

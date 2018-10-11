@@ -1,1 +1,0 @@
-go build  -o goserver.a -ldflags "-s -w" -buildmode=c-archive ./

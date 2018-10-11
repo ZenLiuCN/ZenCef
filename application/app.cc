@@ -69,7 +69,7 @@ void App::OnContextInitialized() {
     go->setDebug(1);
 #endif
     goSetHwnd(win);
-    go->enableApiServer();
+    go->enableWinServer();
     //开启目录服务
 
     if (!dir.empty())

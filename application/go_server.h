@@ -16,7 +16,8 @@ public:
     ~GoServer();
     void start(std::string port);
 
-    void enableApiServer();
+    void enableWinServer();
+    void enableDBServer();
 //    void startInnerWs(HWND win,int port);
 
     int enableHttpServer(std::string dir);

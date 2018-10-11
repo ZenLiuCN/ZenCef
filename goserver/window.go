@@ -2,17 +2,23 @@ package main
 
 import "C"
 import (
+	"bytes"
+	"github.com/gorilla/websocket"
 	. "github.com/lxn/win"
+	"net/http"
+	"strconv"
+	"strings"
 	"unsafe"
 )
-var(
-	rc            *RECT
-	lastLBPos     *POINT
-	win           HWND
-	top           = false
-	drag          = false
-	mx            = GetSystemMetrics(SM_CXSCREEN)
-	my            = GetSystemMetrics(SM_CYSCREEN)
+
+var (
+	rc        *RECT
+	lastLBPos *POINT
+	win       HWND
+	top       = false
+	drag      = false
+	mx        = GetSystemMetrics(SM_CXSCREEN)
+	my        = GetSystemMetrics(SM_CYSCREEN)
 )
 //export goSetHwnd
 func goSetHwnd(hwnd unsafe.Pointer) {
@@ -105,4 +111,83 @@ func doMoveWindow(X, Y int) bool {
 }
 func setEndDrag() {
 	drag = false
+}
+
+//export goUseWinServer
+func goUseWinServer() {
+	if debug != 0 {
+		logger.Println("enable api service")
+	}
+	http.HandleFunc("/win", func(w http.ResponseWriter, r *http.Request) {
+		var upgrader = websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+			CheckOrigin:     func(r *http.Request) bool { return true },
+		}
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			if debug != 0 {
+				logger.Println("ws error :", err)
+			}
+			return
+		}
+		for {
+			messageType, r, err := conn.NextReader()
+			if err != nil {
+				return
+			}
+			switch messageType {
+			case websocket.TextMessage:
+				bits := make([]byte, 1024)
+				r.Read(bits)
+				cmd := string(bits[:bytes.IndexByte(bits, 0)])
+				switch {
+				case cmd == "full":
+					setFullWindow()
+				case cmd == "topmost":
+					setTopMost()
+				case cmd == "nonetop":
+					setNoneTop()
+				case cmd == "close":
+					setClose()
+				case cmd == "max":
+					setMaximize()
+				case cmd == "min":
+					setMinimize()
+				case cmd == "normal":
+					setFrameNormal()
+				case cmd == "thin":
+					setFrameThin()
+				case cmd == "less":
+					setFrameLess()
+				case cmd == "fullscreen":
+					setFullTopScreenMode();
+				case cmd == "restore":
+					setRestore()
+				case strings.HasPrefix(cmd, "drag"):
+					setBeginDrag()
+				case strings.HasPrefix(cmd, "move|"):
+					//if drag && (last == nil || last.Add(bottle).After(time.Now())) {
+					ptr := strings.Split(cmd, "|")
+					X, e1 := strconv.Atoi(ptr[1])
+					Y, e2 := strconv.Atoi(ptr[2])
+					if e1 != nil || e2 != nil {
+						continue
+					}
+					if doMoveWindow(X, Y) {
+						continue
+					}
+				case cmd == "drop":
+					setEndDrag()
+				}
+			case websocket.CloseMessage:
+				return
+			default:
+				data := make([]byte, 1024)
+				r.Read(data)
+				conn.WriteMessage(messageType, data)
+			}
+		}
+	})
+	service["win"] = true
 }
