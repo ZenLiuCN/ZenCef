@@ -52,6 +52,7 @@ already test on windows 7 x64 ,And it may only support windows
 ## go libs depend on
 1. [lxn/win](https://github.com/lxn/win) for easy winapi control
 1. [gorilla/websocket](https://github.com/gorilla/websocket) for websocket process
-1. [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) for database process
+1. [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) for database process  
+`go install --tags "sqlite_stat4 sqlite_foreign_keys sqlite_vacuum_incr sqlite_introspect sqlite_json sqlite_userauth" github.com/mattn/go-sqlite3`
 
 ## see some thing like in spring boot [ZenLiuCN/Pandomium-Vue-Spring-template](https://github.com/ZenLiuCN/Pandomium-Vue-Spring-template)
