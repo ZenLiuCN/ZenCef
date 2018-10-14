@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"github.com/gorilla/websocket"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -21,4 +23,12 @@ func wsError(ws *websocket.Conn, message error) error {
 }
 func wsFError(ws *websocket.Conn, id string, message error) error {
 	return ws.WriteMessage(websocket.TextMessage, []byte(id+":ERROR|"+message.Error()))
+}
+func root() string {
+	f, e := filepath.Abs(os.Args[0])
+	if e != nil {
+		return "."
+	}
+	f = filepath.Dir(f)
+	return f
 }

@@ -70,6 +70,7 @@ void App::OnContextInitialized() {
 #endif
     goSetHwnd(win);
     go->enableWinServer();
+    go->enableDBServer();
     //开启目录服务
 
     if (!dir.empty())

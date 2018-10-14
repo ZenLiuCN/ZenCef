@@ -25,12 +25,11 @@ var (
 var (
 	dbRoot   = "file:./cache/"
 	dataRoot = "file:./cache/"
-	dbPool   = make(map[string]*DB)
-	wsPool   = make(map[net.Addr]string)
+	dbPool   = make(map[net.Addr]map[string]*DB)
 )
 
 func init() {
-	dbRoot = filepath.Join(root(), "cache")
+	dbRoot = filepath.Join(root(), "cache")+string(os.PathSeparator)
 	if _, err := os.Stat(dbRoot); os.IsNotExist(err) {
 		os.MkdirAll(dbRoot, os.ModePerm)
 	}
@@ -57,10 +56,10 @@ func (d *DB) Exec(q string) (res string, er error) {
 		er = ErrNotOpen
 		return
 	}
-	if !strings.HasPrefix(q, "INSERT") || !strings.HasPrefix(q, "UPDATE") || !strings.HasPrefix(q, "DELETE") {
+	/*if !strings.HasPrefix(q, "INSERT") || !strings.HasPrefix(q, "UPDATE") || !strings.HasPrefix(q, "DELETE") {
 		er = ErrNotExec
 		return
-	}
+	}*/
 	r, e := d.db.Exec(q)
 	if e != nil {
 		er = e
@@ -79,10 +78,10 @@ func (d *DB) Query(q string) (res string, er error) {
 		er = ErrNotOpen
 		return
 	}
-	if !strings.HasPrefix(q, "SELECT") {
+	/*if !strings.HasPrefix(q, "SELECT") {
 		er = ErrNotQuery
 		return
-	}
+	}*/
 	var rs *sql.Rows
 	rs, er = d.db.Query(q)
 	if er != nil {
@@ -106,82 +105,94 @@ func (d *DB) Close() (er error) {
 	return d.db.Close()
 }
 
-func root() string {
-	f, e := filepath.Abs(os.Args[0])
-	if e != nil {
-		return "."
+func hasDB(name string) bool {
+	for _, maps := range dbPool {
+		if maps == nil || len(maps) == 0 {
+			continue
+		} else {
+			for name, _ := range maps {
+				if name == name {
+					return true
+				}
+			}
+		}
 	}
-	f = filepath.Dir(f)
-	return f
+	return false
+}
+func getDB(addr net.Addr, name string) *DB {
+	if pool, ok := dbPool[addr]; !ok {
+		return nil
+	} else if db, ok := pool[name]; ok {
+		return db
+	}
+	return nil
+}
+func CloseAll(addr net.Addr) {
+	for _, value := range dbPool[addr] {
+		value.Close()
+	}
+	delete(dbPool, addr)
 }
 
 func Open(addr net.Addr, name, password string) error {
-	if _, ok := wsPool[addr]; ok {
-		return ErrOtherOpen
-	}
-	if _, ok := dbPool[name]; ok {
+	if getDB(addr, name) != nil {
 		return ErrAlreadyOpen
+	}
+	if hasDB(name) {
+		return ErrOtherOpen
 	}
 	db := new(DB)
 	if er := db.Open(name, password); er != nil {
 		return er
 	}
-	dbPool[name] = db
-	wsPool[addr] = name
+	if _, ok := dbPool[addr]; !ok {
+		dbPool[addr] = make(map[string]*DB)
+	}
+	dbPool[addr][name] = db
 	return nil
 }
-func Query(addr net.Addr, query string) (r string, e error) {
-	var (
-		db string
-		ok bool
-	)
-	if db, ok = wsPool[addr]; !ok {
+func Query(addr net.Addr, name, query string) (r string, e error) {
+	db := getDB(addr, name)
+	if db == nil {
 		e = ErrNotOpen
 		return
 	}
-	if d, ok := dbPool[db]; !ok {
-		e = ErrNotOpen
-		return
-	} else {
-		return d.Query(query)
-	}
+	return db.Query(query)
 }
-func Exec(addr net.Addr, query string) (r string, e error) {
-	var (
-		db string
-		ok bool
-	)
-	if db, ok = wsPool[addr]; !ok {
+func Exec(addr net.Addr, name, query string) (r string, e error) {
+	db := getDB(addr, name)
+	if db == nil {
 		e = ErrNotOpen
 		return
 	}
-	if d, ok := dbPool[db]; !ok {
-		e = ErrNotOpen
-		return
-	} else {
-		return d.Exec(query)
-	}
+	return db.Exec(query)
 }
 func Close(addr net.Addr, name string) (er error) {
-	if db, ok := dbPool[name]; ok {
-		er = db.Close()
+	db := getDB(addr, name)
+	if db == nil {
+		return ErrNotOpen
 	}
+	er = db.Close()
 	if er != nil {
 		return
 	}
-	delete(dbPool, name)
-	delete(wsPool, addr)
+	delete(dbPool[addr], name)
 	return
 }
-func Delete(addr net.Addr, db string) (er error) {
+func Delete(addr net.Addr, name string) (er error) {
 	var path string
-	if d, ok := dbPool[db]; ok {
-		d.Close()
+	if hasDB(name) {
+		return ErrOtherOpen
+	}
+	if d := getDB(addr, name); d != nil {
+		er = d.Close()
+		if er != nil {
+			return
+		}
 		path = d.Path
-		delete(dbPool, db)
-		delete(wsPool, addr)
+		delete(dbPool[addr], name)
 	} else {
-		path = filepath.Join(dbRoot, db+".cache")
+		path = filepath.Join(dbRoot, name+".cache")
 	}
 	er = os.Remove(path)
 	return
@@ -215,57 +226,64 @@ func goUseDBServer() {
 				bits := make([]byte, 4096)
 				r.Read(bits)
 				cmd := string(bits[:bytes.IndexByte(bits, 0)])
-				frames := strings.Split(cmd, ":")
-				if len(frames) != 2 {
+				cmds := strings.Split(cmd, "|")
+				if len(cmds) < 2 {
 					wsError(conn, ErrFrameError)
 					continue
 				}
-				id := frames[0]
-				cmd = frames[1]
+				id := cmds[0]
+				cmd = cmds[1]
 				switch {
-				case strings.HasPrefix(cmd, "OPEN|"):
-					ptr := strings.Split(cmd, "|")
-					if len(ptr) != 3 {
+				case cmd == "OPEN":
+					if len(cmds) != 4 {
 						wsFError(conn, id, ErrCmdErr)
 						continue
 					}
-					er := Open(conn.RemoteAddr(), ptr[1], ptr[2])
+					er := Open(conn.RemoteAddr(), cmds[2], cmds[3])
 					if er != nil {
 						wsFError(conn, id, er)
 						continue
 					}
 					wsFText(conn, id, "SUCCESS")
-				case strings.HasPrefix(cmd, "EXEC|"):
-					ptr := strings.Split(cmd, "|")
-					if len(ptr) != 2 {
+				case cmd == "EXEC":
+					if len(cmds) != 4 {
 						wsFError(conn, id, ErrCmdErr)
 						continue
 					}
-					r, er := Exec(conn.RemoteAddr(), ptr[1])
+					r, er := Exec(conn.RemoteAddr(), cmds[2], cmds[3])
 					if er != nil {
 						wsFError(conn, id, er)
 						continue
 					}
 					wsFText(conn, id, r)
-				case strings.HasPrefix(cmd, "QUERY|"):
-					ptr := strings.Split(cmd, "|")
-					if len(ptr) != 2 {
+				case cmd == "QUERY":
+					if len(cmds) != 4 {
 						wsFError(conn, id, ErrCmdErr)
 						continue
 					}
-					r, er := Exec(conn.RemoteAddr(), ptr[1])
+					r, er := Exec(conn.RemoteAddr(), cmds[2], cmds[3])
 					if er != nil {
 						wsFError(conn, id, er)
 						continue
 					}
 					wsFText(conn, id, r)
-				case strings.HasPrefix(cmd, "DELETE|"):
-					ptr := strings.Split(cmd, "|")
-					if len(ptr) != 2 {
+				case cmd == "CLOSE":
+					if len(cmds) != 3 {
 						wsFError(conn, id, ErrCmdErr)
 						continue
 					}
-					er := Delete(conn.RemoteAddr(), ptr[1])
+					er := Close(conn.RemoteAddr(), cmds[2])
+					if er != nil {
+						wsFError(conn, id, er)
+						continue
+					}
+					wsFText(conn, id, "SUCCESS")
+				case cmd == "DELETE":
+					if len(cmds) != 3 {
+						wsFError(conn, id, ErrCmdErr)
+						continue
+					}
+					er := Delete(conn.RemoteAddr(), cmds[2])
 					if er != nil {
 						wsFError(conn, id, er)
 						continue
@@ -273,6 +291,7 @@ func goUseDBServer() {
 					wsFText(conn, id, "SUCCESS")
 				}
 			case websocket.CloseMessage:
+				CloseAll(conn.RemoteAddr())
 				return
 			default:
 				data := make([]byte, 1024)
