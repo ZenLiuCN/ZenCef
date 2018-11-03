@@ -6,39 +6,26 @@ package main
 import "C"
 import (
 	. "github.com/lxn/win"
-	"net/http"
+	"os"
+	"service"
 	"strconv"
 	"strings"
 	"unsafe"
 )
 
-var (
-	apiSrv        *http.Server
-	service       = make(map[string]bool)
-	serverRunning = false
-)
-
 //export goStopServer
 func goStopServer() {
-	if debug != 0 {
-		if debug != 0 {
-			logger.Println("called goStopServer")
-		}
-	}
-	apiSrv.Close()
+	service.Shutdown()
 }
 
 //export goGetExtJson
 func goGetExtJson() *C.char {
-	if debug != 0 {
-		logger.Println("called goGetExtJson")
-	}
 	return C.CString(`var WinObj;WinObj||(WinObj={});(function(){WinObj.wss="ws://127.0.0.1:65530/win";WinObj.close=function(){WinObj.WinWS.send("win:close")};WinObj.full=function(){WinObj.WinWS.send("win:full")};WinObj.topMost=function(){WinObj.WinWS.send("win:topMost")};WinObj.max=function(){WinObj.WinWS.send("win:max")};WinObj.min=function(){WinObj.WinWS.send("win:min")};WinObj.restore=function(){WinObj.WinWS.send("win:restore")};WinObj.drag=function(a){a?WinObj.WinWS.send("win:drag:start"):WinObj.WinWS.send("win:drag:stop")};WinObj.onMouseMove=function(a){eve=window.event||ev;WinObj.WinWS.send("win:drag:move|"+eve.offsetX+"|"+eve.offsetY)}})();`)
 }
 
 //export goIsServerStarted
 func goIsServerStarted() int {
-	if serverRunning {
+	if service.IsRunning() {
 		return 1
 	} else {
 		return 0
@@ -49,15 +36,13 @@ func goIsServerStarted() int {
 func goRunSchemeCommand(url *C.char) {
 	uri := C.GoString(url)
 	act := strings.Split(strings.Replace(strings.ToLower(uri), "window://", "", -1), "/")
-	if debug != 0 {
-		logger.Printf("scheme command  %s \n", act)
-	}
+
 	if len(act) == 0 {
-		logger.Printf("scheme command of  %s  is empty\n", uri)
+		log.Errorf("scheme command of  %s  is empty\n", uri)
 		return
 	}
 	if win == HWND(0) {
-		logger.Printf("scheme command %s not set window handler of %p \n", uri, unsafe.Pointer(win))
+		log.Errorf("scheme command %s not set window handler of %p \n", uri, unsafe.Pointer(win))
 		return
 	}
 	switch act[0] {
@@ -103,31 +88,39 @@ func goRunSchemeCommand(url *C.char) {
 
 //export goStartServer
 func goStartServer(port *C.char) {
-	if debug != 0 {
-		logger.Println("called goStartServer")
-	}
-	apiSrv = &http.Server{Addr: C.GoString(port)}
-	go WinSrv()
-}
-func WinSrv() {
-	if debug != 0 {
-		logger.Println("will start apiSrv ")
-	}
-	if len(service) == 0 {
-		logger.Println("error no service enabled ")
-		return
-	}
-	serverRunning = true
-
-	if e := apiSrv.ListenAndServe(); e != nil {
-		logger.Fatalln("start win api server failed", e)
-		serverRunning = false
-	}
+	service.ListenAndServe(C.GoString(port))
 }
 
-func OffsetRect(rect *RECT, offX int32, offY int32) {
-	rect.Top += offY
-	rect.Bottom += offY
-	rect.Left += offX
-	rect.Right += offX
+//export goSetHwnd
+func goSetHwnd(hwnd unsafe.Pointer) {
+	log.Debugln("called goSetHwnd")
+	win = HWND(unsafe.Pointer(hwnd))
+}
+
+//export goUseWinServer
+func goUseWinServer() {
+	log.Debugln("enable win service")
+	RegisterWinService()
+}
+
+//export goUseHttpServer
+func goUseHttpServer(root *C.char) int {
+	dir := C.GoString(root)
+	log.Debugf("will enable http service of %s ", dir)
+	if i, e := os.Stat(dir); e != nil {
+		log.Errorf("check dir error: %s ", e)
+		return 0
+	} else if !i.IsDir() {
+		log.Errorf("check dir error: not dir of %s ", i)
+		return -1
+	}
+	log.Debugf("enable http service of %s ", dir)
+	RegisterDirService(dir)
+	return 1
+}
+
+//export goUseDBServer
+func goUseDBServer() {
+	log.Debugln("enable db service")
+	RegisterDBService()
 }

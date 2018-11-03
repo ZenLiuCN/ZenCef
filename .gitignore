@@ -63,3 +63,6 @@ dkms.conf
 /cef_lib/cef_lib.7z
 /cef_lib/include/
 /cef_lib/Release/
+/goserver/.idea/
+/goserver/bin/
+/goserver/lib/

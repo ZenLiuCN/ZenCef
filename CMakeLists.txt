@@ -55,23 +55,33 @@ set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -m32)
 
 IF (CMAKE_BUILD_TYPE STREQUAL Debug)
     ADD_DEFINITIONS(-DDEBUG)
+    set(GO_OUT "${PROJECT_SOURCE_DIR}/goserver/lib/debug/goserver.a")
+    include_directories(${PROJECT_SOURCE_DIR}/goserver/lib/debug)
 ELSE ()
     #    set(CMAKE_EXE_LINKER_FLAGS    ${CMAKE_EXE_LINKER_FLAGS} -mwindows --subsystem,windows)
+    set(GO_LDFALG -ldflags "-s -w ")
+    set(GO_OUT "${PROJECT_SOURCE_DIR}/goserver/lib/release/goserver.a")
+    include_directories(${PROJECT_SOURCE_DIR}/goserver/lib/release)
     set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} -mwindows)
 ENDIF ()
+
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
-include_directories(${PROJECT_SOURCE_DIR}/goserver)
 include_directories(${PROJECT_SOURCE_DIR}/application/)
-#[[# https://github.com/uNetworking/uWebSockets
-include_directories(${PROJECT_SOURCE_DIR}/libs/src/)]]
 add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
 
-
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
+
+set(GO D:/Dev/env/golang/go.1.10x32/bin/go.exe)
+set(GO_SRC "${PROJECT_SOURCE_DIR}/goserver")
+set(GO_PATH "%GOPATH%\;${PROJECT_SOURCE_DIR}/goserver")
+
 add_custom_target(goserver
-        COMMAND cd ${PROJECT_SOURCE_DIR}/goserver && ${GO} build -o goserver.a --buildmode=c-archive .
+        COMMAND set GOPATH=${GO_PATH}&& cd ${GO_SRC}/src/srv && ${GO} build -o ${GO_OUT} -i ${GO_LDFALG} -buildmode=c-archive .
+        COMMAND  ${CMAKE_COMMAND} -E cmake_echo_color --cyan "mannul build new golib is over!"
         )
-link_libraries(${PROJECT_SOURCE_DIR}/goserver/goserver.a ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
+
+
+link_libraries(${GO_OUT} ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
 add_executable(cef
         application/main_win.cc
         application/app.cc application/app.h
