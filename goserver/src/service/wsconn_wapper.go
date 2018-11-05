@@ -102,7 +102,9 @@ type WsConnJson struct {
 	*websocket.Conn
 	callback map[string]WsCallback
 }
-
+func (this WsConnJson) GetConn() *websocket.Conn {
+	return this.Conn
+}
 func (this WsConnJson) WriteRaw(data []byte, mtype int) error {
 	log.Tracef("ws send raw type %d \n%+v", mtype, hex.Dump(data))
 	return this.WriteMessage(mtype, data)
