@@ -97,6 +97,44 @@ func (d *DB) Query(q string) (res *gabs.Container, er error) {
 	}
 	return gabs.ParseJSON(data)
 }
+func (d *DB) ExecParam(q string,p ...interface{}) (rs *gabs.Container, er error) {
+	er = d.open()
+	if er != nil {
+		return
+	}
+	defer d.db.Close()
+	r, e := d.db.Exec(q,p...)
+	if e != nil {
+		er = e
+		return
+	}
+	rs = gabs.New()
+	if id, e := r.LastInsertId(); e == nil {
+		rs.Set(id, `LastInsertId`)
+	}
+	if id, e := r.RowsAffected(); e == nil {
+		rs.Set(id, `RowsAffected`)
+	}
+	return
+}
+func (d *DB) QueryParam(q string,p ...interface{}) (res *gabs.Container, er error) {
+	er = d.open()
+	if er != nil {
+		return
+	}
+	defer d.db.Close()
+	var rs *sql.Rows
+	rs, er = d.db.Query(q,p...)
+	if er != nil {
+		return
+	}
+	defer rs.Close()
+	data, er := mapResult(rs)
+	if er != nil {
+		return
+	}
+	return gabs.ParseJSON(data)
+}
 func (d *DB) Querys(query []string) (res *gabs.Container, er error) {
 	er = d.open()
 	if er != nil {
