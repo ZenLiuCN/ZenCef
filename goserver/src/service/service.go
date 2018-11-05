@@ -185,3 +185,19 @@ func loggerMiddleWare(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+func HasService(name string) bool {
+	for k := range srv {
+		if k == name {
+			return true
+		}
+	}
+	return false
+}
+func HasEnableService(name string) bool {
+	for k, v := range srv {
+		if k == name && v.Status() {
+			return true
+		}
+	}
+	return false
+}
