@@ -45,14 +45,23 @@ func EnableService(name string) bool {
 	}
 	return false	
 }
-func ServiceNames() (keys []string) {
+func ServicesName() (keys []string) {
 	keys = make([]string, 0, len(srv))
 	for k := range srv {
 		keys = append(keys, k)
 	}
 	return
 }
-func ServiceStatus() (ser map[string]bool) {
+func ServiceStatus(name string)int  {
+	if s, ok := srv[name]; ok {
+		if s.Status(){
+			return 1
+		}
+		return 0
+	}
+	return -1
+}
+func ServicesStatus() (ser map[string]bool) {
 	ser = make(map[string]bool)
 	for key, value := range srv {
 		ser[key] = value.Status()
