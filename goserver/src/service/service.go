@@ -31,15 +31,19 @@ func RegisterService(service Service) {
 	service.Register(mux)
 	srv[service.Name()] = service
 }
-func DisableService(name string) {
+func DisableService(name string) bool {
 	if s, ok := srv[name]; ok {
 		s.Disable()
+		return true
 	}
+	return false
 }
-func EnableService(name string) {
+func EnableService(name string) bool {
 	if s, ok := srv[name]; ok {
 		s.Enable()
+		return true
 	}
+	return false	
 }
 func ServiceNames() (keys []string) {
 	keys = make([]string, 0, len(srv))
