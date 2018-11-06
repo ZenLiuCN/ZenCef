@@ -152,6 +152,11 @@ func (this WsConnJson) SendRaw(msg *gabs.Container) error {
 func (this WsConnJson) SendResponse(id string, msg *gabs.Container) error {
 	return this.WriteFrame(id, msg)
 }
+func (this WsConnJson) SendResponseDone(id string, msg *gabs.Container) error {
+	msg=warpToMap(msg)
+	msg.Set(true,`status`)
+	return this.WriteFrame(id, msg)
+}
 func (this WsConnJson) SendResponseSuccess(id string) error {
 	g := gabs.New()
 	g.Set(true, `status`)
@@ -179,4 +184,12 @@ func (this WsConnJson) HandleCallback(msg *gabs.Container) error {
 }
 func NewWsConnJson(ws *websocket.Conn) *WsConnJson {
 	return &WsConnJson{Conn: ws}
+}
+func warpToMap(g *gabs.Container)*gabs.Container{
+	if g.IsArray(){
+		g1:=gabs.New()
+		g1.Set(g.Data(),`data`)
+		return g1
+	}
+	return g
 }
