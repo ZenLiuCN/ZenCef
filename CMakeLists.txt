@@ -87,7 +87,6 @@ add_executable(cef
         application/main_win.cc
         application/app.cc application/app.h
         application/client.cc application/client_win.cc application/client.h
-        application/resource.h
         application/res/app.rc
         application/helper_win.cc application/helper_win.h
         application/debug.h

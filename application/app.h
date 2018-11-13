@@ -8,7 +8,7 @@
 #include "debug.h"
 //#include "JsActionHandler.h"
 #include <include/wrapper/cef_helpers.h>
-#include "resource.h"
+#include "res/resource.h"
 #include "WindowSchemeHandler.h"
 #include "WebSocketSchemeHandler.h"
 

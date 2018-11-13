@@ -124,5 +124,28 @@ bool Client::OnContextMenuCommand(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFr
     // return CefContextMenuHandler::OnContextMenuCommand(browser, frame, params, command_id, event_flags);
 }
 
+void Client::OnBeforeDownload(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownloadItem> download_item,
+                              const CefString &suggested_name, CefRefPtr<CefBeforeDownloadCallback> callback) {
+    callback->Continue(download_item->GetURL(), true);
+}
+
+void Client::OnDownloadUpdated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownloadItem> download_item,
+                               CefRefPtr<CefDownloadItemCallback> callback) {
+    if (download_item->IsComplete())
+    {
+        auto str=download_item->GetFullPath().ToWString();
+        auto path=download_item->GetFullPath().ToWString();
+        WCHAR_LOGGER_(L"download path %ls",str.c_str())
+        MessageBoxW(nullptr,str.append(L"下载完成").c_str(),L"下载完成",MB_OK|MB_ICONINFORMATION);
+        ShellExecuteW(nullptr, nullptr,L"explorer.exe",path.insert(0,L"/select,\"").append(L"\"").c_str(), nullptr, SW_SHOWNORMAL);
+        WCHAR_LOGGER_(L"download param %ls",path.c_str())
+        if (browser->IsPopup() && !browser->HasDocument())
+        {
+            //browser->GetHost()->ParentWindowWillClose();
+            browser->GetHost()->CloseBrowser(true);
+        }
+    }
+}
+
 
 

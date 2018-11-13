@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <iostream>
 #include "app.h"
-#include "console_win.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
@@ -19,9 +18,18 @@
 
 //#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
 // Entry point function for all processes.
-int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
-    UNREFERENCED_PARAMETER(hPrevInstance);
+int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
     UNREFERENCED_PARAMETER(lpCmdLine);
+//int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
+//    UNREFERENCED_PARAMETER(pCmdLine);
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    //<editor-fold desc="Hidden console Window">
+//    auto hwnd = GetConsoleWindow();
+//    LOGGER_("hidden console window %p", hwnd);
+//    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
+    //</editor-fold>
+
+
     // Enable High-DPI support on Windows 7 or newer.
     CefEnableHighDPISupport();
 
@@ -41,7 +49,8 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     CefSettings settings;
     settings.remote_debugging_port = 9222;
     settings.ignore_certificate_errors = 1;
-
+    std::string locale("zh_CN");
+    cef_string_utf8_to_utf16(locale.c_str(), locale.size(), &settings.locale);
 
 #if !defined(CEF_USE_SANDBOX)
     settings.no_sandbox = true;
@@ -53,21 +62,16 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int 
     browser_settings.universal_access_from_file_urls = STATE_ENABLED;
     browser_settings.file_access_from_file_urls = STATE_ENABLED;
     //</editor-fold>
-
-    CefRefPtr<App> app(new App("../ext", ":65530", "http://127.0.0.1:65530/", browser_settings, true));
+#ifdef DEBUG
+    CefRefPtr<App> app(new App("./ext", ":65530", "http://127.0.0.1:65530/", browser_settings, true));
+#else
+    CefRefPtr<App> app(new App("./ext", ":65530", "http://127.0.0.1:65530/loading.html", browser_settings, true));
+#endif
     int exit_code = CefExecuteProcess(main_args, app.get(), sandbox_info);
     if (exit_code >= 0) {
         // The sub-process has completed so return here.
         return exit_code;
     }
-    //</editor-fold>
-    //<editor-fold desc="Hidden console Window">
-
-    auto hwnd = GetConsoleWindow();
-    LOGGER_("hidden console window %p", hwnd);
-    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
-
-
     //</editor-fold>
 
 

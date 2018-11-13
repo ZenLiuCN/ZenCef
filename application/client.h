@@ -21,6 +21,7 @@ class Client : public CefClient,
                public CefLifeSpanHandler,
                public CefContextMenuHandler,
                public CefKeyboardHandler,
+               public CefDownloadHandler,
                public CefLoadHandler {
 public:
     Client();
@@ -34,7 +35,9 @@ public:
     static Client *INSTANCE();
 
     //<editor-fold desc="CefClientMethods">
-
+    CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE {
+        return this;
+    }
     CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
         return this;
     }
@@ -98,7 +101,17 @@ public:
 
     bool IsClosing() const { return is_closing_; }
 
-
+    //<editor-fold desc="Download Handler">
+    void OnBeforeDownload(
+            CefRefPtr<CefBrowser> browser,
+            CefRefPtr<CefDownloadItem> download_item,
+            const CefString& suggested_name,
+            CefRefPtr<CefBeforeDownloadCallback> callback) override;
+    void OnDownloadUpdated(
+            CefRefPtr<CefBrowser> browser,
+            CefRefPtr<CefDownloadItem> download_item,
+            CefRefPtr<CefDownloadItemCallback> callback) override;
+    //</editor-fold>
 
 
 private:
