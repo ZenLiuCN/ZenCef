@@ -54,5 +54,11 @@ already test on windows 7 x64 ,And it may only support windows
 1. [gorilla/websocket](https://github.com/gorilla/websocket) for websocket process
 1. [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3) for database process  
 `go install --tags "sqlite_stat4 sqlite_foreign_keys sqlite_vacuum_incr sqlite_introspect sqlite_json sqlite_userauth" github.com/mattn/go-sqlite3`
+## cxx libs depend on (include in application/lib)
+1. [fmtlib\fmt](https://github.com/fmtlib/fmt)
+2. [plog](https://github.com/SergiusTheBest/plog)
+3. [mingw-std-threads](https://github.com/meganz/mingw-std-threads)
+## projects show case
+now is welcome to commit
 
 ## see some thing like in spring boot [ZenLiuCN/Pandomium-Vue-Spring-template](https://github.com/ZenLiuCN/Pandomium-Vue-Spring-template)
