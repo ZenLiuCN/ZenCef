@@ -9,12 +9,15 @@
 #include "include/base/cef_bind.h"
 #include <include/cef_app.h>
 #include "helper_win.h"
-#include "debug.h"
+#include "logger.h"
+#include "WindowController.h"
+#include "singleton.h"
 #include <list>
 
 enum MenuID {
     MENU_SHOW_DEV_TOOLS
 };
+
 
 class Client : public CefClient,
                public CefDisplayHandler,
@@ -25,19 +28,20 @@ class Client : public CefClient,
                public CefLoadHandler {
 public:
     Client();
-
     ~Client() override;
+    WindowController win;
 
     bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
                           int line) override;
 
-    // Provide access to the single global instance of this object.
-    static Client *INSTANCE();
+
 
     //<editor-fold desc="CefClientMethods">
+
     CefRefPtr<CefDownloadHandler> GetDownloadHandler() OVERRIDE {
         return this;
     }
+
     CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE {
         return this;
     }
@@ -91,8 +95,10 @@ public:
 
 
     //<editor-fold desc="CefKeyboardHandlerMethods">
+
     bool OnPreKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, MSG *os_event,
                        bool *is_keyboard_shortcut) override;
+
     bool OnKeyEvent(CefRefPtr<CefBrowser> browser, const CefKeyEvent &event, MSG *os_event) override;
     //</editor-fold>
 
@@ -102,28 +108,43 @@ public:
     bool IsClosing() const { return is_closing_; }
 
     //<editor-fold desc="Download Handler">
+
     void OnBeforeDownload(
             CefRefPtr<CefBrowser> browser,
             CefRefPtr<CefDownloadItem> download_item,
-            const CefString& suggested_name,
+            const CefString &suggested_name,
             CefRefPtr<CefBeforeDownloadCallback> callback) override;
+
     void OnDownloadUpdated(
             CefRefPtr<CefBrowser> browser,
             CefRefPtr<CefDownloadItem> download_item,
             CefRefPtr<CefDownloadItemCallback> callback) override;
+
+    void OnFaviconURLChange(CefRefPtr<CefBrowser> browser, const std::vector<CefString> &icon_urls) override;
+
+    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                  CefRefPtr<CefProcessMessage> message) override;
+
     //</editor-fold>
 
+    HWND getWin();
+
+    void setWin(HWND win);
+
+    void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser, bool fullscreen) override;
 
 private:
     // List of existing browser windows. Only accessed on the CEF UI thread.
     typedef std::list<CefRefPtr<CefBrowser> > BrowserList;
     BrowserList browser_list_;
-
     bool is_closing_;
-    void ShowDevTool(const CefRefPtr<CefBrowser> browser);
+
+    void ShowDevTool(CefRefPtr<CefBrowser> browser);
+
 
     // Include the default reference counting implementation.
 IMPLEMENT_REFCOUNTING(Client);
 };
 
 #endif  // ZEN_CEF_HANDLER_H_
+

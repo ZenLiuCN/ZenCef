@@ -43,14 +43,7 @@ func EnableService(name string) bool {
 		s.Enable()
 		return true
 	}
-	return false	
-}
-func ServicesName() (keys []string) {
-	keys = make([]string, 0, len(srv))
-	for k := range srv {
-		keys = append(keys, k)
-	}
-	return
+	return false
 }
 func ServiceStatus(name string)int  {
 	if s, ok := srv[name]; ok {
@@ -60,6 +53,13 @@ func ServiceStatus(name string)int  {
 		return 0
 	}
 	return -1
+}
+func ServicesName() (keys []string) {
+	keys = make([]string, 0, len(srv))
+	for k := range srv {
+		keys = append(keys, k)
+	}
+	return
 }
 func ServicesStatus() (ser map[string]bool) {
 	ser = make(map[string]bool)
@@ -86,10 +86,10 @@ func (s ServiceFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s.Handler(w, r)
 }
-func (s ServiceFunc) Disable() {
+func (s *ServiceFunc) Disable() {
 	s.enable = false
 }
-func (s ServiceFunc) Enable() {
+func (s *ServiceFunc) Enable() {
 	s.enable = true
 }
 func (s ServiceFunc) Status() bool {
@@ -141,10 +141,11 @@ func NewWebsocketService(name string, path string, handler WsHandlerFunction, re
 		for {
 			messageType, r, err := conn.NextReader()
 			if err != nil {
+				log.Errorf(`read data error %v`,err)
 				if e := handler(c, err, messageType, r); e != nil {
 					return
 				} else {
-					continue
+					return
 				}
 			}
 			if e := handler(c, err, messageType, r); e != nil {
@@ -170,13 +171,18 @@ func ListenAndServe(addr string) {
 		IdleTimeout:  time.Second * 60,
 	}
 	go func() {
-		if er := Server.ListenAndServe(); er != nil {
+		if er := Server.ListenAndServe(); er != nil &&er!=http.ErrServerClosed {
 			panic(er)
 			Server = nil
 		}
 	}()
 }
 func Shutdown() error {
+	defer func() {
+		if r:=recover();r!=nil{
+
+		}
+	}()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	e := Server.Shutdown(ctx)

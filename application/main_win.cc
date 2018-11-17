@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <iostream>
+#include "config.h"
 #include "app.h"
+#include "logger.h"
 
 
 // When generating projects with CMake the CEF_USE_SANDBOX value will be defined
@@ -15,21 +17,10 @@
 #pragma comment(lib, "cef_sandbox.lib")
 #endif
 
-
-//#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" )
-// Entry point function for all processes.
-int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow) {
     UNREFERENCED_PARAMETER(lpCmdLine);
-//int wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
-//    UNREFERENCED_PARAMETER(pCmdLine);
     UNREFERENCED_PARAMETER(hPrevInstance);
-    //<editor-fold desc="Hidden console Window">
-//    auto hwnd = GetConsoleWindow();
-//    LOGGER_("hidden console window %p", hwnd);
-//    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_HIDEWINDOW);
-    //</editor-fold>
-
-
+    InitLogger();
     // Enable High-DPI support on Windows 7 or newer.
     CefEnableHighDPISupport();
 
@@ -47,10 +38,17 @@ int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
     CefMainArgs main_args(hInstance);
     //<editor-fold desc="CefSettings">
     CefSettings settings;
-    settings.remote_debugging_port = 9222;
+    settings.remote_debugging_port = conf.CEF_DEBUG_PORT;
     settings.ignore_certificate_errors = 1;
-    std::string locale("zh_CN");
+    settings.log_severity=LOGSEVERITY_DISABLE;
+    std::string locale(conf.CEF_DEFAULT_LOCALE);
     cef_string_utf8_to_utf16(locale.c_str(), locale.size(), &settings.locale);
+    auto cacheDir = conf.CEF_CACHE_DIR;
+    cef_string_utf8_to_utf16(cacheDir.c_str(), cacheDir.size(), &settings.cache_path);
+    auto logFile = conf.LOG_CEF_FILE;
+    cef_string_utf8_to_utf16(logFile.c_str(), logFile.size(), &settings.log_file);
+/*    LOGV<<fmt::sprintf("cef log file path %s",conf.LOG_CEF_FILE.c_str());
+    LOGV<<fmt::sprintf("cef cache file path %s",conf.CEF_CACHE_DIR.c_str());*/
 
 #if !defined(CEF_USE_SANDBOX)
     settings.no_sandbox = true;
@@ -64,8 +62,9 @@ int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
     //</editor-fold>
 #ifdef DEBUG
     CefRefPtr<App> app(new App("./ext", ":65530", "http://127.0.0.1:65530/", browser_settings, true));
+//    CefRefPtr<App> app(new App("./ext", ":65530", "http://soft.hao123.com/soft/appid/29236.html", browser_settings, true));
 #else
-    CefRefPtr<App> app(new App("./ext", ":65530", "http://127.0.0.1:65530/loading.html", browser_settings, true));
+    CefRefPtr<App> app(new App("./ext", ":65530", "http://127.0.0.1:65530", browser_settings, true));
 #endif
     int exit_code = CefExecuteProcess(main_args, app.get(), sandbox_info);
     if (exit_code >= 0) {
@@ -73,11 +72,8 @@ int WINAPI  WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
         return exit_code;
     }
     //</editor-fold>
-
-
     // Initialize CEF.
     CefInitialize(main_args, settings, app.get(), sandbox_info);
-
     // Run the CEF message loop. This will block until CefQuitMessageLoop() is
     // called.
     CefRunMessageLoop();

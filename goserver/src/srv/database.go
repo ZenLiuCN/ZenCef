@@ -22,13 +22,13 @@ var (
 	ErrOtherOpen   = errors.New("database already opened by other session")
 )
 var (
-	dbRoot   = "file:./cache/"
-	dataRoot = "file:./cache/"
+	dbRoot   = "file:./caches/dat"
+	dataRoot = "file:./caches/dat"
 	dbPool   = make(map[net.Addr]map[string]*DB)
 )
 
 func init() {
-	dbRoot = filepath.Join(root(), "cache") + string(os.PathSeparator)
+	dbRoot = filepath.Join(root(), "caches","dat") + string(os.PathSeparator)
 	if _, err := os.Stat(dbRoot); os.IsNotExist(err) {
 		os.MkdirAll(dbRoot, os.ModePerm)
 	}
@@ -208,9 +208,9 @@ func (d *DB) Execs(q []string) (res *gabs.Container, er error) {
 func mapResult(r *sql.Rows) ([]byte, error) {
 	cols := make([]interface{}, 0, 10)
 	colType, _ := r.ColumnTypes()
-	for _, v := range colType {
-		log.Tracef("col %s %s", v.Name(), v.DatabaseTypeName())
-	}
+	/*	for _, v := range colType {
+			log.Tracef("col %s %s", v.Name(), v.DatabaseTypeName())
+		}*/
 	for r.Next() {
 		/*		colData := make([]interface{}, len(colType))
 				colPtr := make([]interface{}, len(colType))
@@ -241,6 +241,7 @@ func mapResult(r *sql.Rows) ([]byte, error) {
 		}
 		m := make(map[string]interface{})
 		for i, cType := range colType {
+			//log.Tracef(`col %s type %s`,cType.Name(),cType.DatabaseTypeName())
 			val := columnPointers[i].(*interface{})
 			switch strings.ToUpper(cType.DatabaseTypeName()) {
 			case `TEXT`:
@@ -248,6 +249,8 @@ func mapResult(r *sql.Rows) ([]byte, error) {
 			case ``: //pragma
 				switch cType.Name() {
 				case `name`, `type`:
+					m[cType.Name()] = string((*val).([]byte))
+				case `isRetroactive`:
 					m[cType.Name()] = string((*val).([]byte))
 				default:
 					m[cType.Name()] = *val
@@ -354,15 +357,20 @@ func Delete(addr net.Addr, name string) (er error) {
 }
 
 func RegisterDBService() {
-	service.NewWebsocketService(`database`, `/db`, service.WsGabsCommander(databaseCommander), 1024, 1024)
+	service.NewWebsocketService(`database`, `/db`, service.WsGabsCommander(databaseCommander), 4096, 4096)
 }
 
 //return none nil will close websocket connection
 func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.Container) error {
-	switch strings.ToLower(m.GetString(`cmd`)) {
+	defer func() {
+		if r:=recover();r!=nil{
+			conn.SendErrorResponse(id, ErrCmdFormat)
+		}
+	}()
+	switch strings.ToLower(m.MustGetString(`cmd`)) {
 	case `open`:
-		name := m.GetString(`name`)
-		pwd := m.GetString(`pwd`)
+		name := m.MustGetString(`name`)
+		pwd := m.MustGetString(`pwd`)
 		if name == "" || pwd == "" {
 			conn.SendErrorResponse(id, ErrCmdFormat)
 			return nil
@@ -374,8 +382,8 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 		conn.SendResponseSuccess(id)
 		return nil
 	case `close`:
-		name := m.GetString(`name`)
-		if name == "" {
+		name,e := m.GetString(`name`)
+		if e!=nil {
 			conn.SendErrorResponse(id, ErrCmdFormat)
 			return nil
 		}
@@ -386,8 +394,8 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 		conn.SendResponseSuccess(id)
 		return nil
 	case `delete`:
-		name := m.GetString(`name`)
-		if name == "" {
+		name ,e:= m.GetString(`name`)
+		if e!=nil {
 			conn.SendErrorResponse(id, ErrCmdFormat)
 			return nil
 		}
@@ -398,8 +406,8 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 		conn.SendResponseSuccess(id)
 		return nil
 	case `exec`:
-		name := m.GetString(`name`)
-		query := m.GetString(`query`)
+		name := m.MustGetString(`name`)
+		query := m.MustGetString(`query`)
 		if name == "" {
 			conn.SendErrorResponse(id, ErrCmdFormat)
 			return nil
@@ -419,7 +427,7 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 				conn.SendResponse(id, g)
 			}
 		} else {
-			qs := m.GetStrings(`querys`)
+			qs := m.MustGetStringSlice(`querys`)
 			if r, e := Execs(conn.RemoteAddr(), name, qs); e != nil {
 				conn.SendErrorResponse(id, e)
 				return nil
@@ -432,8 +440,8 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 		}
 		return nil
 	case `query`:
-		name := m.GetString(`name`)
-		query := m.GetString(`query`)
+		name := m.MustGetString(`name`)
+		query := m.MustGetString(`query`)
 		if name == "" {
 			conn.SendErrorResponse(id, ErrCmdFormat)
 			return nil
@@ -453,7 +461,7 @@ func databaseCommander(conn *service.WsConnJson, mType int, id string, m *gabs.C
 				conn.SendResponse(id, g)
 			}
 		} else {
-			qs := m.GetStrings(`querys`)
+			qs,_ := m.GetStringSlice(`querys`)
 			if r, e := Querys(conn.RemoteAddr(), name, qs); e != nil {
 				conn.SendErrorResponse(id, e)
 				return nil

@@ -6,10 +6,12 @@ package main
 import "C"
 import (
 	. "github.com/lxn/win"
+	"net"
 	"os"
 	"service"
 	"strconv"
 	"strings"
+	"syscall"
 	"unsafe"
 )
 
@@ -87,8 +89,19 @@ func goRunSchemeCommand(url *C.char) {
 }
 
 //export goStartServer
-func goStartServer(port *C.char) {
-	service.ListenAndServe(C.GoString(port))
+func goStartServer(port *C.char) C.int {
+	addr := C.GoString(port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		log.Errorf("Can't listen on port %q: %s", addr, err)
+		m, _ := syscall.UTF16PtrFromString("65530端口被占用,无法启动系统.\n请检查是否已经启动本系统!")
+		c, _ := syscall.UTF16PtrFromString("错误")
+		MessageBox(HWND(0), m, c, MB_OK|MB_ICONERROR)
+		return C.int(0)
+	}
+	ln.Close()
+	service.ListenAndServe(addr)
+	return C.int(1)
 }
 
 //export goSetHwnd

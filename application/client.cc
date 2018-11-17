@@ -1,26 +1,14 @@
 
 #include "client.h"
+#include "downloadBox.hpp"
 
-namespace {
-
-    Client *g_instance = nullptr;
-
-}  // namespace
 
 Client::Client()
-        : is_closing_(false) {
-    DCHECK(!g_instance);
-    g_instance = this;
-}
+        : is_closing_(false),
+        win(Singleton<WindowController>::getInstance()) {}
 
-Client::~Client() {
-    g_instance = nullptr;
-}
+Client::~Client() = default;
 
-// static
-Client *Client::INSTANCE() {
-    return g_instance;
-}
 
 void Client::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
     CEF_REQUIRE_UI_THREAD();
@@ -99,8 +87,6 @@ void Client::CloseAllBrowsers(bool force_close) {
 }
 
 
-
-
 void Client::OnBeforeContextMenu(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefContextMenuParams> params, CefRefPtr<CefMenuModel> model) {
     model->Clear();
@@ -131,20 +117,64 @@ void Client::OnBeforeDownload(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownlo
 
 void Client::OnDownloadUpdated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefDownloadItem> download_item,
                                CefRefPtr<CefDownloadItemCallback> callback) {
-    if (download_item->IsComplete())
-    {
-        auto str=download_item->GetFullPath().ToWString();
-        auto path=download_item->GetFullPath().ToWString();
-        WCHAR_LOGGER_(L"download path %ls",str.c_str())
-        MessageBoxW(nullptr,str.append(L"下载完成").c_str(),L"下载完成",MB_OK|MB_ICONINFORMATION);
-        ShellExecuteW(nullptr, nullptr,L"explorer.exe",path.insert(0,L"/select,\"").append(L"\"").c_str(), nullptr, SW_SHOWNORMAL);
-        WCHAR_LOGGER_(L"download param %ls",path.c_str())
-        if (browser->IsPopup() && !browser->HasDocument())
-        {
+
+/*    LOGGERWLn_(L"IsComplete %d  IsInProgress %d %d %ls IsCanceled %d IsValid %d", download_item->IsComplete(),
+               download_item->IsInProgress(), download_item->GetPercentComplete(),
+               download_item->GetFullPath().ToWString().c_str(), download_item->IsCanceled(), download_item->IsValid())*/
+
+    if (download_item->IsComplete()) {
+        downloadBox::getInfo()["path"] = download_item->GetFullPath().ToWString();
+        HWND hwndDlg = downloadBox::getHWND();
+        SetWindowTextW(GetDlgItem(hwndDlg, IDCANCEL), L"关闭");
+        SetWindowTextW(GetDlgItem(hwndDlg, IDD_CONTENT),
+                       download_item->GetOriginalUrl().ToWString().insert(0, L"下载文件:\n").append(L" 已完成.").c_str());
+        SendMessageW(GetDlgItem(hwndDlg, IDD_PROGRESS_BAR), PBM_SETMARQUEE, static_cast<WPARAM>(100), NULL);
+        EnableWindow(GetDlgItem(hwndDlg, IDOK), TRUE);
+        if (browser->IsPopup() && !browser->HasDocument()) {
             //browser->GetHost()->ParentWindowWillClose();
             browser->GetHost()->CloseBrowser(true);
         }
+    } else if (download_item->IsInProgress() && download_item->GetPercentComplete() == 0) {
+        downloadBox::ShowDownloading(
+                {
+                        {"url",  download_item->GetURL().ToWString()},
+                        {"path", download_item->GetFullPath().ToWString()}
+                }
+        );
+        if (browser->IsPopup() && !browser->HasDocument()) {
+            PostMessage(browser->GetHost()->GetWindowHandle(), WM_SYSCOMMAND, SC_MINIMIZE, 0);
+        }
+    } else if (download_item->IsCanceled()) {
+        HWND hwndDlg = downloadBox::getHWND();
+        DestroyWindow(hwndDlg);
+        if (browser->IsPopup() && !browser->HasDocument()) {
+            //browser->GetHost()->ParentWindowWillClose();
+            browser->GetHost()->CloseBrowser(true);
+        }
+    } else if (download_item->IsInProgress() && download_item->GetPercentComplete() > 0) {
+        HWND hwndDlg = downloadBox::getHWND();
+        if (downloadBox::getInfo()["cancel"]) {
+            callback->Cancel();
+            DestroyWindow(hwndDlg);
+            if (browser->IsPopup() && !browser->HasDocument()) {
+                //browser->GetHost()->ParentWindowWillClose();
+                browser->GetHost()->CloseBrowser(true);
+            }
+        } else {
+            downloadBox::getInfo()["isDone"] = download_item->GetPercentComplete();
+            SendMessageW(GetDlgItem(hwndDlg, IDD_PROGRESS_BAR), PBM_SETPOS,
+                         static_cast<WPARAM>(download_item->GetPercentComplete()), NULL);
+        }
+
     }
+}
+
+HWND Client::getWin() {
+    return win.getWin();
+}
+
+void Client::setWin(HWND win) {
+    this->win.setWin(win);
 }
 
 

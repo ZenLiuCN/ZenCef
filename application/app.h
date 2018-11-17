@@ -5,12 +5,9 @@
 #include "go_server.h"
 #include "client.h"
 #include "helper_win.h"
-#include "debug.h"
-//#include "JsActionHandler.h"
+#include "logger.h"
 #include <include/wrapper/cef_helpers.h>
-#include "res/resource.h"
-#include "WindowSchemeHandler.h"
-#include "WebSocketSchemeHandler.h"
+
 
 // Implement application-level callbacks for the browser process.
 class App : public CefApp,
@@ -37,7 +34,7 @@ public:
 
 private:
 //    JsActionHandler* handler;
-    GoServer* go;
+    GoServer go;
     std::string uri;
     std::string portStr;
     std::string root;

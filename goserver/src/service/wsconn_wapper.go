@@ -102,6 +102,7 @@ type WsConnJson struct {
 	*websocket.Conn
 	callback map[string]WsCallback
 }
+
 func (this WsConnJson) GetConn() *websocket.Conn {
 	return this.Conn
 }
@@ -125,8 +126,8 @@ func (this WsConnJson) WriteFrame(id string, msg *gabs.Container) (er error) {
 		g.Set(id, `id`)
 		return this.WriteRaw(g.Bytes(), websocket.TextMessage)
 	}
-	log.Tracef("ws send frame %s %v", id, msg)
-	if !msg.Exists(`id`) || msg.GetString(`id`) == "" {
+	//log.Tracef("ws send frame %s %v", id, msg)
+	if _, e := msg.GetString(`id`); e != nil {
 		_, er = msg.Set(id, `id`)
 		if er != nil {
 			log.Errorf("send frame error %+v \n%s", er, string(debug.Stack()))
@@ -172,7 +173,7 @@ func (this WsConnJson) SendCallback(msg *gabs.Container, callback WsCallback) er
 	return this.WriteFrameCallback(GetMessageId(), msg, callback)
 }
 func (this WsConnJson) HandleCallback(msg *gabs.Container) error {
-	id := msg.GetString(`id`)
+	id, _ := msg.GetString(`id`)
 	if id == "" {
 		return ErrNoCallback
 	}

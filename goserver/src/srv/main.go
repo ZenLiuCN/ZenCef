@@ -12,7 +12,7 @@ var (
 )
 
 func init() {
-	w, _ := logger.NewRotateWriter(`./log.log`, logger.MustToBytes("1MB"), 15*time.Minute)
+	w, _ := logger.NewRotateWriter(root()+`/logs/server.log`, logger.MustToBytes("1MB"), 15*time.Minute)
 	logger.Init(logger.TRACE, os.Stdout, w)
 	log = logger.GetLogger()
 	service.SetLogger(log)

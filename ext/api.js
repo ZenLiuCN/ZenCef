@@ -60,12 +60,10 @@ WinApi.prototype = {
         ev.button === 0 ? this.ws.send("win:move|" + ev.screenX + "|" + ev.screenY) : ""
     }
     , onDrag: function () {
-        this.drag();
-        document.addEventListener("mousemove", this.move, true)
+        this.drag();  document.addEventListener("mousemove", this.move, true)
     }
     , offDrag: function () {
-        this.drag();
-        document.removeEventListener("mousemove", this.move, true)
+        this.drop(); document.removeEventListener("mousemove", this.move, true)
     }
 };
 
@@ -206,171 +204,6 @@ Jsdbc.prototype = {
     }
 }
 
-function SchemeApi() {
-
-}
-
-SchemeApi.prototype = {
-    constructor: SchemeApi
-    , scheme: 'window://'
-    , xhr: new XMLHttpRequest()
-    , moving: false
-    , _send: function (cmd) {
-        return new Promise((r, j) => {
-            this.xhr.abort()
-            this.xhr.open('GET', this.scheme + cmd, true);
-            this.xhr.onload = function (e) {
-                if (e.status === 200 || e.status === 304) {
-                    r(e)
-                } else {
-                    j(e)
-                }
-            }
-            this.xhr.send();
-        })
-    }
-    , isCef: function () {
-        return new Promise((r, j) => {
-            this.xhr.timeout = 500
-            this.xhr.open('GET', this.scheme + 'min?12345', true)
-            this.xhr.onload = function (e) {
-                if (e.status === 200 || e.status === 304) {
-                    r(e)
-                } else {
-                    j(e)
-                }
-            }
-            this.xhr.timeout = function (e) {
-                j(e)
-            }
-            this.xhr.onerror = function (e) {
-                j(e)
-            }
-            this.xhr.send()
-        })
-
-    }
-    , min: function () {
-        return this._send('min')
-    }
-    , max: function () {
-        return this._send('max')
-
-    }
-    , full: function () {
-        return this._send('full')
-
-    }
-    , close: function () {
-        return this._send('close')
-    }
-    , restore: function () {
-        return this._send('restore')
-
-    }
-    , topmost: function () {
-        return this._send('topmost')
-
-    }
-    , nonetop: function () {
-        return this._send('nonetop')
-
-    }
-    , thin: function () {
-        return this._send('thin')
-    }
-    , normal: function () {
-        return this._send('normal')
-    }
-    , less: function () {
-        return this._send('less')
-    }
-    , fullscreen: function () {
-        return this._send('fullscreen')
-    }
-    , drag: function () {
-        let x = new XMLHttpRequest();
-        x.open('GET', this.scheme + 'drag', true);
-        x.send();
-        this.moving = true;
-    }
-    , drop: function () {
-        let x = new XMLHttpRequest();
-        x.open('GET', this.scheme + 'drop', true);
-        x.send();
-        this.moving = false;
-    }
-    , move: function (ev) {
-        eve = window.event || ev;
-        if (this.moving && eve.button === 0) {
-            let x = new XMLHttpRequest();
-            x.open('GET', this.scheme + 'move|' + eve.screenX + "|" + eve.screenY, true);
-            x.send();
-        }
-    }
-    /*,onDrag : function () {Win.drag();document.addEventListener("mousemove", Win.move, true)}
-    ,offDrag : function () {Win.drop();document.removeEventListener("mousemove", Win.move, true)}*/
-};
-
-function ScannerApi(handler) {
-    return this.init(handler)
-}
-
-ScannerApi.prototype = {
-    constructor: ScannerApi,
-    wss: `ws://127.0.0.1:65530/scan`,
-    ws: null,
-    hander: null,
-    init: function (handler) {
-        return new Promise((r, j) => {
-            this.hander = handler
-            this.ws = new WebSocket(this.wss);
-            this.ws.onopen = () => {
-                console.log("scanner connected")
-                this.enable = true
-                r()
-            }
-            this.ws.onerror = (e) => {
-                if (typeof j !== "undefined") {
-                    j(e)
-                }
-                console.log(e)
-            }
-            this.ws.onmessage = (e) => {
-                if (this.hander !== null) {
-                    switch (this.hander(e.data)) {
-                        case 1:
-                            this.success()
-                            break
-                        case 2:
-                            this.timeout()
-                            break
-                        default:
-                            this.fail()
-                    }
-                } else {
-                    console.log(`received with out handler`, e)
-                }
-            }
-            this.ws.onclose = () => {
-                this.hander = null
-                this.opened = false
-                this.enable = false
-            }
-        })
-    }
-    , start: function () {
-        this.ws.send(`START`)
-    }, stop: function () {
-        this.ws.send(`STOP`)
-    }, success: function () {
-        this.ws.send(`SUCCESS`)
-    }, fail: function () {
-        this.ws.send(`FAIL`)
-    }, timeout: function () {
-        this.ws.send(`TIMEOUT`)
-    }
-}
 
 function TestJsdbc() {
     let dbc = new Jsdbc()
@@ -403,3 +236,25 @@ function TestWinApi() {
     let win = new WinApi()
 
 }
+
+
+var CefWin={
+moving:false,
+thin:function(){native function WinControl();return WinControl('thin')},
+full:function(){native function WinControl();return WinControl('full')},
+normal:function(){native function WinControl();return WinControl('normal')},
+less:function(){native function WinControl();return WinControl('less')},
+fullscreen:function(){native function WinControl();return WinControl('fullscreen')},
+min:function(){native function WinControl();return WinControl('min')},
+max:function(){native function WinControl();return WinControl('max')},
+restore:function(){native function WinControl();return WinControl('restore')},
+topmost:function(){native function WinControl();return WinControl('topmost')},
+nonetop:function(){native function WinControl();return WinControl('nonetop')},
+close:function(){native function WinControl();this.moving=true;return WinControl('close')},
+drag:function(){native function WinControl();this.moving=true;return WinControl('drag')},
+drop:function(){native function WinControl();this.moving=false;return WinControl('drop')},
+move:function(ev){eve=window.event||ev;if(this.moving&&eve.button===0){return this._domove(eve.screenX,eve.screenY)}},
+onDrag:function(){this.drag();document.addEventListener('mousemove',this.move,true)},
+offDrag:function(){this.drop();document.removeEventListener('mousemove',this.move,true)},
+_domove:function(x,y){native function WinControl();return WinControl('move',x,y)}
+};

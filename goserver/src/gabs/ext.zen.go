@@ -1,11 +1,11 @@
 package gabs
 
 import (
-	"encoding/json"
+	`encoding/json`
 	"github.com/ugorji/go/codec"
-	"io"
-	"io/ioutil"
-	"reflect"
+	`io`
+	`io/ioutil`
+	`reflect`
 )
 
 //<editor-fold desc="MsgPack Extension">
@@ -115,36 +115,39 @@ func (g *Container) ReflectType(path ...string) string {
 	}
 	return reflect.Kind(0).String()
 }
-func (g *Container) GetString(path ...string) string {
-	if g.Exists(path...) {
-		if s, ok := g.S(path...).Data().(string); ok {
-			return s
+
+
+func (g *Container) ContainsPath(path ...string) bool {
+	for _, v := range path {
+		if !g.ExistsP(v){
+			return false
 		}
 	}
-	return ""
+	return true
 }
-func (g *Container) GetStrings(path ...string) []string {
-	if g.Exists(path...) {
-		if s, ok := g.S(path...).Data().([]interface{}); ok {
-			if len(s) == 0 {
-				return []string{}
-			}
-			if _, ok := s[0].(string); !ok {
-				return []string{}
-			}
-			r := make([]string, len(s))
-			for i, V := range s {
-				r[i] = V.(string)
-			}
-			return r
-		}
-	}
-	return nil
-}
-func ParseAnyToJson(data interface{}) (*Container, error) {
-	d, e := json.Marshal(data)
-	if e != nil {
-		return nil, e
+
+func ParseObject(data interface{}) (*Container, error)   {
+	d,e:=json.Marshal(data)
+	if e!=nil{
+		return nil,e
 	}
 	return ParseJSON(d)
+}
+func MustParseObject(data interface{})(r *Container)  {
+	d,e:=json.Marshal(data)
+	if e!=nil{
+		panic(e)
+	}
+	r,e= ParseJSON(d)
+	if e!=nil{
+		panic(e)
+	}
+	return r
+}
+func MustParseJSON(data []byte)( *Container) {
+	r,e:=ParseJSON(data)
+	if e!=nil{
+		panic(e)
+	}
+	return r
 }

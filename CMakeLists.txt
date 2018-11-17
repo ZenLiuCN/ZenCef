@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 14)
 
 # ---BEGIN USE CLANG
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_COMPILER "clang.exe")
 set(CMAKE_CXX_COMPILER "clang++.exe")
@@ -68,8 +69,12 @@ ENDIF ()
 
 include_directories(${PROJECT_SOURCE_DIR}/cef_lib)
 include_directories(${PROJECT_SOURCE_DIR}/application/)
+include_directories(${PROJECT_SOURCE_DIR}/application/lib/plog/include/)
+include_directories(${PROJECT_SOURCE_DIR}/application/lib/fmt/include/)
+include_directories(${PROJECT_SOURCE_DIR}/application/lib/mingw-std-threads/)
 add_subdirectory(${PROJECT_SOURCE_DIR}/cef_lib/libcef_dll)
-
+# BUG direct use fmt
+#add_subdirectory(${PROJECT_SOURCE_DIR}/application/lib/fmt)
 set(EXTRA_LIBS ${EXTRA_LIBS} libcef_dll_wrapper)
 
 set(GO D:/Dev/env/golang/go.1.10x32/bin/go.exe)
@@ -84,34 +89,29 @@ add_custom_target(goserver
 
 link_libraries(${GO_OUT} ${MINGW32LIB}libwinmm.a ${MINGW32LIB}libws2_32.a)
 add_executable(cef
+        # src of fmtlib
+        application/lib/fmt/src/format.cc
+        application/lib/fmt/src/posix.cc
+        # config
+        application/config.cc
+        # logger
+        application/logger.cc
+        # enternce
         application/main_win.cc
-        application/app.cc application/app.h
-        application/client.cc application/client_win.cc application/client.h
+        # CefApp
+        application/app.cc
+        # CefClient
+        application/client.cc
+        application/client_win.cc
+        # res
         application/res/app.rc
-        application/helper_win.cc application/helper_win.h
-        application/debug.h
-        #        application/WsServer.hpp
-        application/go_server.cc application/go_server.h
-        application/WindowSchemeHandler.cc application/WindowSchemeHandler.h
-        application/helpers.cpp application/helpers.h application/WebSocketSchemeHandler.cc
-        application/WebSocketSchemeHandler.h application/JsActionHandler.h
-        application/JsActionHandler.cpp application/console_win.h)
+        application/md5.hpp
+        application/httpClient.hpp
+        application/helper_win.cc
+        application/WindowController.cc
+        application/go_server.cc
+        application/helpers.cpp
+        application/downloadBox.hpp
+        application/v8handler.cc application/singleton.h)
 
 target_link_libraries(cef ${EXTRA_LIBS})
-
-#[[if (CMAKE_BUILD_TYPE_DEBUG)
-    foreach(FILE ${DEBUG_BIN})
-        add_custom_command(
-                TARGET cef
-                POST_BUILD
-                COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${FILE} ${EXECUTABLE_OUTPUT_PATH}
-        )
-    endforeach(FILE)
-else ()
-    add_custom_command(
-            TARGET cef
-            POST_BUILD
-            COMMAND ${CMAKE_COMMAND} ARGS -E copy_directory ${RESOURCE_SRC} ${EXECUTABLE_OUTPUT_PATH}
-            COMMAND ${CMAKE_COMMAND} ARGS -E copy ${RELEASE_BIN} ${TEST_HTML} ${EXECUTABLE_OUTPUT_PATH}
-    )
-endif ()]]

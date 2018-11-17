@@ -9,21 +9,40 @@
 //#include "WsServer.hpp"
 #include <string>
 
-//using namespace WebSocket;
+using std::string;
+
 class GoServer {
 public:
-    GoServer();
+    GoServer() = default;
+
     ~GoServer();
-    void start(std::string port);
 
-    void enableWinServer();
-    void enableDBServer();
-//    void startInnerWs(HWND win,int port);
+    bool start(string port);
 
-    int enableHttpServer(std::string dir);
+    int enableHttpServer(string dir);
+
     void close();
-    static void runSchemeCommand(std::string url);
+
     void setDebug(int i);
+
+    string openDB(string name, string password);
+
+    string queryDB(string name, string query);
+
+    string execDB(string name, string query);
+
+    string execsDB(string name, string query);
+
+    string querysDB(string name, string query);
+
+    string exportDB(string name);
+    string openedDB();
+
+    int delDB(string name);
+
+    int closeDB(string name);
+
+    void closeAllDB();
 
 private:
 //   WebSocketServer *ws= nullptr;
